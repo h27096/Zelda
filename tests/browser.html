@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Plateau Quest browser checks</title></head><body>
+<h1>Browser integration checks</h1><pre id="result">Running…</pre>
+<div id="joystick" style="width:120px;height:120px"><span id="knob"></span></div>
+<button data-control="attack">Sword</button><button id="menu">Menu</button>
+<canvas id="canvas" style="width:1024px;height:768px"></canvas>
+<script type="module">
+import {setupInput} from '../src/input.js';
+import {Renderer} from '../src/render.js';
+import {Assets} from '../src/assets.js';
+import {Game} from '../src/game.js';
+import {save,load,clear} from '../src/save.js';
+const result=document.querySelector('#result'),checks=[];
+function check(label,test){if(!test)throw Error(label);checks.push('PASS '+label)}
+try{
+ const input=setupInput(),key=(type,code,target=document.body)=>target.dispatchEvent(new KeyboardEvent(type,{code,bubbles:true,cancelable:true}));
+ key('keydown','KeyW');key('keydown','KeyD');check('diagonal keyboard',Math.abs(Math.hypot(...Object.values(input.vector()))-1)<1e-8);
+ key('keydown','ArrowUp');key('keyup','KeyW');key('keyup','KeyD');check('alternate held key survives release',input.vector().y===-1);
+ window.dispatchEvent(new Event('blur'));check('blur releases input',input.vector().y===0);
+ const button=document.querySelector('[data-control]');button.setPointerCapture=()=>{};
+ button.dispatchEvent(new PointerEvent('pointerdown',{pointerId:4,bubbles:true}));check('touch attack',input.consume('attack'));
+ button.dispatchEvent(new PointerEvent('pointercancel',{pointerId:4}));check('touch cancel removes pressed style',!button.classList.contains('pressed'));
+ const pad=document.querySelector('#joystick');pad.setPointerCapture=()=>{};const box=pad.getBoundingClientRect();
+ pad.dispatchEvent(new PointerEvent('pointerdown',{pointerId:5,clientX:box.x+110,clientY:box.y+60}));check('joystick right',input.vector().x>.9);
+ button.dispatchEvent(new PointerEvent('pointerdown',{pointerId:6}));check('move and sword simultaneously',input.consume('attack')&&input.vector().x>.9);
+ pad.dispatchEvent(new PointerEvent('lostpointercapture',{pointerId:5}));check('lost capture stops movement',input.vector().x===0);
+ const menu=document.querySelector('#menu');menu.focus();key('keydown','Escape',menu);check('Escape works with menu focus',input.consume('pause'));input.clear();
+ const assets=new Assets();await assets.load();const game=new Game(),canvas=document.querySelector('#canvas'),renderer=new Renderer(canvas,assets);
+ for(const [w,h] of [[1024,768],[768,1024],[390,844],[844,390]]){canvas.style.width=w+'px';canvas.style.height=h+'px';renderer.resize();renderer.draw(game,1/60);check('render '+w+'×'+h,canvas.width>0&&canvas.height>0)}
+ Object.assign(game.player,{x:720,y:420,level:1});renderer.draw(game,1/60);check('upper-level render',true);
+ const fake={map:new Map(),getItem(k){return this.map.get(k)??null},setItem(k,v){this.map.set(k,v)},removeItem(k){this.map.delete(k)}};
+ check('browser save/load',save(game.snapshot(),fake)&&load(fake).state.player.level===1);check('clear',clear(fake)&&load(fake).state===null);
+ result.textContent=checks.join('\n')+'\nALL '+checks.length+' CHECKS PASSED';
+}catch(error){result.textContent=checks.join('\n')+'\nFAIL '+error.stack;console.error(error)}
+</script></body></html>
+
