@@ -10,11 +10,11 @@
 <body>
   <main id="game" aria-label="Plateau Quest game">
     <canvas id="scene" aria-label="Game world"></canvas>
-    <div class="hud"><div id="hearts" aria-label="Health"></div><span id="region">GREAT PLATEAU · FIELD TRIAL</span><button id="save" type="button">SAVE</button></div>
-    <div id="message" role="status">Find the old gate beyond the ruins.</div>
+    <div class="hud"><div id="hearts" aria-label="Health"></div><span id="region">GREAT PLATEAU · SHRINES 0/4</span><button id="save" type="button">SAVE</button></div>
+    <div id="message" role="status">Find four shrines. Tap ◆ near one to enter.</div>
     <div class="controls" aria-label="Touch controls">
       <div class="move"><button data-control="left" aria-label="Move left">◀</button><button data-control="right" aria-label="Move right">▶</button></div>
-      <div class="actions"><button data-control="attack" aria-label="Sword attack">⚔</button><button data-control="jump" aria-label="Jump">▲</button></div>
+      <div class="actions"><button data-control="interact" aria-label="Enter shrine or use altar">◆</button><button data-control="attack" aria-label="Sword attack">⚔</button><button data-control="jump" aria-label="Jump">▲</button></div>
     </div>
     <div id="overlay" hidden><div class="panel"><h1>PLATEAU QUEST</h1><p id="overlayText"></p><button id="resume">CONTINUE</button><button id="restart">NEW GAME</button></div></div>
     <button id="pause" aria-label="Pause game">Ⅱ</button>
