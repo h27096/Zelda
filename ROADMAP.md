@@ -12,9 +12,9 @@ A connected original region with Shrine of Resurrection, Temple of Time, Plateau
 
 Timed three-strike sword chains, directional stamina-limited guarding, aim/release bow and finite arrows, remote Pulse Orbs, collision-aware Tether crates, Stillmark suspension, and Frostpath water crossings. Enemy notice/approach/windup/recovery/return states, invulnerability, knockback and checkpoint respawn. Supply kits, practice blade condition and repair, compact touch selection, keyboard parity, schema-4 migration and modular ability APIs. The v0.3 world, progression and original geometry remain intact. Physical iPad Safari verification is still pending.
 
-## v0.5 · Shrines and progression
+## v0.5 · Shrines and progression (implemented)
 
-New top-down shrine interiors and puzzles, Spirit Orbs, heart/stamina upgrades, towers, map, fast travel, checkpoints and expanded save migrations. Revisit ideas from the preserved platformer trials rather than transplanting their layouts.
+Eight original rooms across Windstep (Tether), Reedlight (Frostpath), Rootsong (Stillmark) and Embercrest (Pulse Orb). Data-driven room definitions, entrances, exits, room checkpoints, safe reset, one-time shrine caches and persistent seals. Each seal grants a trail blessing for +1 heart or +25 stamina. The Journal map includes discovered travel points and upgrade controls. Schema 5 migrates v0.2–v0.4 saves without losing earned progression. The Plateau, original geometry, combat, controls and asset hooks remain; final visuals and audio stay in v0.6.
 
 ## v0.6 · Original visual and audio identity
 

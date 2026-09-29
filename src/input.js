@@ -3,7 +3,7 @@ export function movementVector(x,y){const length=Math.hypot(x,y);return length>1
 export function facing(x,y){return directionNames[(Math.round(Math.atan2(y,x)/(Math.PI/4))+8)%8];}
 export function setupInput(){
   const held=new Set(),pointers=new Map(),pressed=new Set();let axisSprint=false;let epoch=0;let stick=null,axis={x:0,y:0};
-  const map={KeyW:'up',ArrowUp:'up',KeyS:'down',ArrowDown:'down',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyJ:'attack',KeyK:'attack',Space:'attack',KeyE:'interact',Enter:'interact',Escape:'pause',KeyL:'guard',ShiftLeft:'sprint',ShiftRight:'sprint',KeyF:'tool',KeyQ:'cycle'};
+  const map={KeyW:'up',ArrowUp:'up',KeyS:'down',ArrowDown:'down',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',KeyJ:'attack',KeyK:'attack',Space:'attack',KeyE:'interact',Enter:'interact',Escape:'pause',KeyM:'pause',KeyL:'guard',ShiftLeft:'sprint',ShiftRight:'sprint',KeyF:'tool',KeyQ:'cycle'};
   const active=k=>(k==='sprint'&&axisSprint)||[...held].some(code=>map[code]===k)||[...pointers.values()].includes(k);
   const down=(k,fn)=>{if(!active(k))pressed.add(k);fn()};
   const clear=()=>{epoch++;axisSprint=false;held.clear();pointers.clear();pressed.clear();stick=null;axis={x:0,y:0};document.querySelectorAll('.pressed').forEach(b=>b.classList.remove('pressed'));knob.style.transform='';};

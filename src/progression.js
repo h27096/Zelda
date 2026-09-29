@@ -1,4 +1,4 @@
-import {shrines,objects} from './world.js?v=0.4.0';
+import {shrines,objects} from './world.js?v=0.5.0';
 
 export const freshProgress=()=>({metGuide:false,tower:false,seals:[],exitUnlocked:false,completed:false,collected:[]});
 export const treasureIds=objects.filter(o=>['chest','pickup'].includes(o.kind)).map(o=>o.id);

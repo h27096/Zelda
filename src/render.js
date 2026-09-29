@@ -1,11 +1,13 @@
-import {supplies} from './equipment.js?v=0.4.0';
-import {drawCombatEntity,drawActorCues} from './combat-render.js?v=0.4.0';
-import {width,height,bridge,stairs,objects,elevationAt,surfaces,ramps,waters,regions,trails,shrines,exit} from './world.js?v=0.4.0';
-import {followCamera,depthCompare} from './camera.js?v=0.4.0';
+import {supplies} from './equipment.js?v=0.5.0';
+import {drawCombatEntity,drawActorCues} from './combat-render.js?v=0.5.0';
+import {width,height,bridge,stairs,objects,elevationAt,surfaces,ramps,waters,regions,trails,shrines,exit} from './world.js?v=0.5.0';
+import {followCamera,depthCompare} from './camera.js?v=0.5.0';
+import {drawShrine} from './shrine-render.js?v=0.5.0';
 export class Renderer {
   constructor(canvas,assets){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.assets=assets;this.camera={x:0,y:0};this.resize();}
   resize(){const box=this.canvas.getBoundingClientRect();this.cssWidth=box.width;this.cssHeight=box.height;this.dpr=Math.min(devicePixelRatio||1,2);this.canvas.width=Math.round(box.width*this.dpr);this.canvas.height=Math.round(box.height*this.dpr);this.scale=Math.max(.7,Math.min(1.8,box.width/800,box.height/520));this.viewport={width:box.width/this.scale,height:box.height/this.scale};this.snap=true;}
   draw(game,dt){
+    if(game.room){drawShrine(this,game);this.snap=true;return;}
     const ctx=this.ctx,p=game.player;
     this.camera=followCamera(this.camera,{x:p.x,y:p.y-elevationAt(p.x,p.y,p.level)-10},this.viewport,{width,height},dt,this.snap);this.snap=false;
     ctx.setTransform(this.dpr*this.scale,0,0,this.dpr*this.scale,0,0);ctx.imageSmoothingEnabled=false;
@@ -76,5 +78,6 @@ export function drawMap(canvas,game){
   const points=[{x:340,y:700,name:'Start'},{x:800,y:320,name:'Tower'},{x:1456,y:1440,name:'Temple'},{x:1536,y:2080,name:game.progress.exitUnlocked?'Descent open':'Descent sealed'},...(game.progress.tower?shrines.map(r=>({...r,name:r.name.replace(' Shrine',''),done:game.progress.seals.includes(r.id)})):[])];
   ctx.font='bold 90px system-ui';ctx.textAlign='center';
   for(const p of points){ctx.fillStyle=p.done?'#b6e9ae':'#fff0c3';ctx.beginPath();ctx.arc(p.x,p.y,25,0,Math.PI*2);ctx.fill();ctx.fillStyle='#172f2a';ctx.fillText((p.done?'✓ ':'')+p.name,p.x,p.y-48);}
-  ctx.fillStyle='#ffffff';ctx.strokeStyle='#172f2a';ctx.lineWidth=12;ctx.beginPath();ctx.arc(game.player.x,game.player.y,30,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+  const position=game.outdoor?.position??game.player;
+  ctx.fillStyle='#ffffff';ctx.strokeStyle='#172f2a';ctx.lineWidth=12;ctx.beginPath();ctx.arc(position.x,position.y,30,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
 }

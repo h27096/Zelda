@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#203c35">
   <title>Plateau Quest · The Great Plateau</title>
-  <link rel="stylesheet" href="style.css?v=0.4.0">
+  <link rel="stylesheet" href="style.css?v=0.5.0">
 </head>
 <body>
   <main id="game" aria-label="Plateau Quest">
     <canvas id="scene" tabindex="0" aria-label="Great Plateau. Move with WASD or arrow keys, J to attack, E to interact. Open Journal for objectives and map."></canvas>
     <header class="hud">
-      <div class="identity"><span class="eyebrow">PLATEAU QUEST <b>v0.4</b></span><span id="level">GREAT PLATEAU</span></div>
+      <div class="identity"><span class="eyebrow">PLATEAU QUEST <b>v0.5</b></span><span id="level">GREAT PLATEAU</span></div>
       <div class="vitals"><meter id="stamina" min="0" max="100" value="100" aria-label="Stamina"></meter><span id="gear"></span></div><div id="hearts" aria-label="5 of 5 hearts">♥♥♥♥♥</div>
       <button id="save" type="button">Save</button><button id="pause" type="button" aria-label="Journal and pause" aria-expanded="false">Journal</button>
     </header>
@@ -28,18 +28,16 @@
       <button id="resume">Continue</button>
       <canvas id="atlas" width="768" height="576" aria-label="Plateau trail map. Shrine markers appear after lighting the tower; directions are listed below."></canvas>
       <p id="tokens"></p><ul id="objectives"></ul>
-      <p>Move: WASD / arrows or joystick<br>Sword: J / K / Space · Use: E / Enter<br>L: hold guard · Shift / joystick beyond rim: sprint · Q: next tool · F: tool<br>Bow: hold F / TOOL, steer to aim, release to fire (1 arrow).<br>Pulse orb: throw ahead, wait for arming, press again to burst. Step outside its 88-unit blast!<br>Tether: face the copper crate east of start; activate, then steer to carry it. Activate again to release.<br>Stillmark: face a foe to freeze it for 3 seconds.<br>Frostpath: face a nearby pond to form a crossing for 18 seconds. It stays while occupied. Reload returns to your checkpoint if on ice.<br>Rest stones restore hearts, stamina, at least 12 arrows, and blade condition. Worn blades still work at reduced power.<br>Trail kits: east of start, Old Road approach, west of Reedlight pond. A new sparring lookout waits southeast of start near (750, 1100); the original camps remain optional.<br>Escape: pause · Saves stay on this device.</p>
+      <h2>Trail blessings</h2><p id="blessings"></p>
+      <button id="upgradeHealth">Spend 1 · +1 heart</button><button id="upgradeStamina">Spend 1 · +25 stamina</button>
+      <h2>Fast travel</h2><p id="travelStatus" role="status"></p><div id="travel"></div>
+      <div id="roomActions" hidden><h2>Current trial</h2><p id="roomHelp"></p><button id="resetRoom">Reset current room</button><button id="leaveShrine">Return to Plateau</button></div>
+      <p>Move: WASD / arrows or joystick<br>Sword: J / K / Space · Use: E / Enter<br>L: hold guard · Shift / joystick beyond rim: sprint · Q: next tool · F: tool<br>Bow: hold F / TOOL, steer to aim, release to fire (1 arrow).<br>Pulse orb: throw ahead, wait for arming, press again to burst. Step outside its 88-unit blast!<br>Tether: face a copper block; activate, then steer slowly to carry. Turn gradually; release to refill stamina.<br>Stillmark: face a foe or copper block to freeze it for 3 seconds.<br>Frostpath: face a nearby pond to form a crossing for 18 seconds. It stays while occupied. Reload returns to your checkpoint if on ice.<br>Rest stones restore hearts, stamina, at least 12 arrows, and blade condition. Worn blades still work at reduced power.<br>Trail kits: east of start, Old Road approach, west of Reedlight pond. A new sparring lookout waits southeast of start near (750, 1100); the original camps remain optional.<br>M / Escape: Journal, map, upgrades and travel. In a shrine, Journal also offers reset and return. E / USE activates signs, caches and plinths. Saves stay on this device.</p>
       <button id="restart">New game</button>
       <div id="confirmReset" hidden><p>Erase this top-down save and start again?</p><button id="confirmNew">Start over</button><button id="cancelReset">Keep save</button></div>
       <a href="legacy/index.html">Play the preserved platformer prototype ↗</a>
     </section></div>
-    <div id="shrineView" hidden><section class="panel" role="dialog" aria-modal="true" aria-labelledby="shrineTitle">
-      <span class="eyebrow">SANCTUARY ALCOVE</span><div id="shrineGlyph" aria-hidden="true"></div>
-      <h1 id="shrineTitle"></h1><p id="shrineDescription"></p>
-      <p>A quiet resting chamber. Full shrine puzzles arrive in v0.5.</p>
-      <button id="recordSeal">Record seal &amp; heal</button><button id="leaveShrine">Return to trail</button>
-    </section></div>
   </main>
-  <script type="module" src="src/main.js?v=0.4.0"></script>
+  <script type="module" src="src/main.js?v=0.5.0"></script>
 </body>
 </html>

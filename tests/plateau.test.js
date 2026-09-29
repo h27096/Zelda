@@ -7,6 +7,7 @@ import {freshProgress,validateProgress,treasureCount} from '../src/progression.j
 const memory=()=>{const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)}};
 const input=(action='',x=0,y=0)=>({vector:()=>({x,y}),consume:k=>k===action});
 const obj=id=>objects.find(o=>o.id===id);
+import {solveRoom,completeShrine} from './helpers/shrine-play.js';
 
 test('every landmark, shrine, cache and enemy is reachable through actual movement, including both stair sets',()=>{
   const start={x:336,y:704,level:0},key=p=>`${p.x},${p.y},${p.level}`;
@@ -35,8 +36,7 @@ test('full tutorial uses nearby interactions, any shrine order, temple hand-in a
   use('tower');assert.ok(g.progress.tower);
   for(const id of ['ember','root','wind','reed']){
     use(id);assert.equal(g.shrine,id);
-    const before={...g.player};g.update(1,input('',1,1));assert.equal(g.player.x,before.x,'outside simulation frozen');
-    g.recordSeal();g.recordSeal();g.shrine=null;
+    solveRoom(g);solveRoom(g);g.recordSeal();g.leaveShrine();
   }
   assert.equal(g.progress.seals.length,4);
   use('rowan-start');assert.equal(g.progress.exitUnlocked,false);
@@ -50,12 +50,12 @@ test('full tutorial uses nearby interactions, any shrine order, temple hand-in a
 });
 
 test('partial progress, open shrine reload and checkpoint death preserve tutorial state',()=>{
-  const g=new Game();g.interact(obj('rowan-start'));g.interact(obj('tower'));g.interact(obj('root'));g.recordSeal();
+  const g=new Game();g.interact(obj('rowan-start'));g.interact(obj('tower'));completeShrine(g,'root');g.enterShrine('root');
   const s=memory();assert.ok(save(g.snapshot(),s));const restored=new Game(load(s).state);
-  assert.equal(restored.shrine,null,'reload returns outside, never into a modal softlock');
+  assert.equal(restored.shrine,'root','reload returns to current room checkpoint');restored.leaveShrine();
   assert.deepEqual(restored.progress.seals,['root']);
   Object.assign(restored.player,{x:880,y:800,hp:1});for(let i=0;i<30;i++)restored.update(1/60,input());
-  assert.equal(restored.player.hp,5);assert.equal(restored.player.x,spawn.x);assert.deepEqual(restored.progress.seals,['root']);
+  assert.equal(restored.player.hp,5);assert.equal(restored.player.x,restored.checkpoint.x);assert.deepEqual(restored.progress.seals,['root']);
 });
 
 test('all ponds, cliff sides and locked descent block; only open corridor crosses the southern cliff',()=>{

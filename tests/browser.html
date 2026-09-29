@@ -10,6 +10,7 @@ import {Assets} from '../src/assets.js';
 import {Game} from '../src/game.js';
 import {save,load,clear} from '../src/save.js';
 import {objects,shrines} from '../src/world.js';
+import {solveRoom} from './helpers/shrine-play.js';
 const result=document.querySelector('#result'),checks=[];
 function check(label,test){if(!test)throw Error(label);checks.push('PASS '+label)}
 try{
@@ -38,7 +39,10 @@ try{
  Object.assign(game.player,{x:720,y:420,level:1});renderer.draw(game,1/60);check('upper-level render',true);
  for(const o of objects.filter(o=>['shrine','tower','temple','sanctuary','camp','gate'].includes(o.kind))){Object.assign(game.player,{x:o.x,y:o.y+60,level:o.level});renderer.snap=true;renderer.draw(game,1/60);check('landmark render '+o.id,true)}
  game.interact(objects.find(o=>o.kind==='guide'));game.interact(objects.find(o=>o.kind==='tower'));
- for(const shrine of shrines){game.interact(shrine.kind?shrine:objects.find(o=>o.id===shrine.id));game.recordSeal();game.shrine=null;}
+ for(const shrine of shrines){game.enterShrine(shrine.id);for(let room=0;room<2;room++){
+   for(const [w,h] of [[1024,768],[768,1024],[390,844],[844,390]]){canvas.style.width=w+'px';canvas.style.height=h+'px';renderer.resize();renderer.draw(game,1/60);check(`shrine ${shrine.id}/${room} render ${w}×${h}`,canvas.width>0);}
+   solveRoom(game);check(`shrine ${shrine.id}/${room} input replay`,true);
+ }game.leaveShrine();}
  check('four shrine seals',game.progress.seals.length===4);
  drawMap(canvas,game);check('journal map with completed shrines',true);
  Object.assign(game.player,{x:720,y:420,level:1});
