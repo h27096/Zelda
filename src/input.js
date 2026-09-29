@@ -7,7 +7,7 @@ export function setupInput(){
   const active=k=>[...held].some(code=>map[code]===k)||[...pointers.values()].includes(k);
   const down=(k,fn)=>{if(!active(k))pressed.add(k);fn()};
   const clear=()=>{held.clear();pointers.clear();pressed.clear();stick=null;axis={x:0,y:0};document.querySelectorAll('.pressed').forEach(b=>b.classList.remove('pressed'));knob.style.transform='';};
-  window.addEventListener('keydown',e=>{const k=map[e.code];if(!k||(k!=='pause'&&(e.target.closest('#overlay,input')||(['Space','Enter'].includes(e.code)&&e.target.closest('button,a')))))return;e.preventDefault();down(k,()=>held.add(e.code));});
+  window.addEventListener('keydown',e=>{const k=map[e.code];if(!k||(k!=='pause'&&(e.target.closest('#overlay,#shrineView,input')||(['Space','Enter'].includes(e.code)&&e.target.closest('button,a')))))return;e.preventDefault();down(k,()=>held.add(e.code));});
   window.addEventListener('keyup',e=>{if(map[e.code]){held.delete(e.code);e.preventDefault()}});
   document.querySelectorAll('[data-control]').forEach(b=>{
     b.addEventListener('pointerdown',e=>{e.preventDefault();const k=b.dataset.control;down(k,()=>pointers.set(e.pointerId,k));b.setPointerCapture(e.pointerId);b.classList.add('pressed')});
