@@ -16,4 +16,6 @@
 .actions{display:grid;grid-template-columns:repeat(3,64px);gap:8px;align-items:center}
 .actions button,.actions button:first-child{width:64px;height:64px;margin:0;padding:5px;font-size:24px}.actions button:first-child{border-radius:14px;grid-column:1 / 3;width:136px;font-size:20px}.actions small{font-size:8px;letter-spacing:.04em}
 #nearby{bottom:calc(env(safe-area-inset-bottom) + 190px)}
+button:disabled{opacity:.5;cursor:default}.panel h2{font-size:18px;font-weight:600;margin-top:24px}#travel{display:flex;flex-wrap:wrap;gap:4px}#travel button{text-align:left;font-size:13px}#roomActions{border-top:1px solid #b6bd8955;margin-top:20px}
+@media(max-width:600px){.hud{display:grid;grid-template-columns:minmax(105px,1fr) auto auto}.identity{grid-column:1 / 3;grid-row:1}#hearts{grid-column:3;grid-row:1}.vitals{grid-column:1;grid-row:2}#save{grid-column:2;grid-row:2}#pause{grid-column:3;grid-row:2}}
 @media(max-width:600px){.vitals{min-width:70px}#stamina{width:70px}#gear{font-size:8px}.actions{grid-template-columns:repeat(3,50px);gap:6px}.actions button,.actions button:first-child{width:50px;height:54px;min-height:44px}.actions button:first-child{width:106px}.controls{left:12px;right:12px}#joystick{width:104px;height:104px}.hud{padding:8px}#objective{top:116px}#message{top:166px}}

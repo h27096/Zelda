@@ -1,5 +1,5 @@
-import {directionNames} from './input.js?v=0.4.0';
-import {canStand,elevationAt} from './world.js?v=0.4.0';
+import {directionNames} from './input.js?v=0.5.0';
+import {canStand,elevationAt} from './world.js?v=0.5.0';
 export const direction=face=>{const a=directionNames.indexOf(face)*Math.PI/4;return {x:Math.cos(a),y:Math.sin(a)}};
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export const samePlane=(a,b)=>a.level===b.level&&Math.abs(elevationAt(a.x,a.y,a.level)-elevationAt(b.x,b.y,b.level))<18;
@@ -12,7 +12,7 @@ export function clearLine(a,b){
   return true;
 }
 export function clearPath(g,a,b){
-  if(!clearLine(a,b))return false;
+  if(!(g.clearLine?.(a,b)??clearLine(a,b)))return false;
   const dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy;
   return !g.crates.some(c=>{
     if(c===a||c===b||!samePlane(c,a))return false;
@@ -34,8 +34,7 @@ export function hurtPlayer(g,source,damage=1,blockable=true){
   if(blockable&&p.blocking&&inArc(p,source,90,.45)&&spend(g,24)){g.effects.push({...p,kind:'guard',life:.25});return;}
   p.blocking=false;p.hp-=damage;p.hurt=1.2;p.attack=0;g.swing=null;g.aiming=false;g.heldObject=null;g.needsSave=true;
   const d=distance(p,source)||1;g.moveBody(p,(p.x-source.x)/d*24,(p.y-source.y)/d*24);
-  if(p.hp<=0){Object.assign(p,g.checkpoint,{hp:5,hurt:2,attack:0,cooldown:0});g.equipment.stamina=100;g.projectiles=[];g.bomb=null;g.heldObject=null;g.swing=null;g.resetCrates();
-    for(const e of g.enemies){Object.assign(e,e.home,{windup:0,cooldown:1,mode:'return'});}g.notice('Restored at your rest stone · Progress and supplies kept.');}
+  if(p.hp<=0)g.respawn();
 }
 export function updateCombat(g,dt,input){
   const p=g.player,eq=g.equipment;
@@ -52,7 +51,7 @@ export function updateCombat(g,dt,input){
   }
   for(const a of g.projectiles){a.life-=dt;const steps=Math.ceil(360*dt/4);for(let i=0;i<steps&&a.life>0;i++){
     const old={...a};a.x+=a.dx*360*dt/steps;a.y+=a.dy*360*dt/steps;
-    if(!clearLine(old,a)||g.crates.some(c=>samePlane(c,a)&&distance(c,a)<c.r)){a.life=0;break;}
+    if(!(g.clearLine?.(old,a)??clearLine(old,a))||g.crates.some(c=>samePlane(c,a)&&distance(c,a)<c.r)){a.life=0;break;}
     const target=g.enemies.find(e=>e.hp>0&&samePlane(e,a)&&distance(e,a)<14);
     if(target){hitEnemy(g,target,2,a);a.life=0;}
   }}g.projectiles=g.projectiles.filter(a=>a.life>0);

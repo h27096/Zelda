@@ -31,13 +31,21 @@ document.querySelector('#run').onclick=async()=>{
   result.textContent='Running acceptance checks…';await show('start');el('pause').click();await tick();check('Journal button opens objectives and map',!el('overlay').hidden&&el('objectives').children.length===8);
   el('resume').click();await tick();check('Continue resumes',el('overlay').hidden);
   await press('Escape');check('Escape opens journal',!el('overlay').hidden);await press('Escape');check('Escape closes journal',el('overlay').hidden);
-  await show('ember');await press('KeyE');check('Use opens shrine alcove',!el('shrineView').hidden&&el('shrineTitle').textContent==='Embercrest Shrine');
-  el('recordSeal').click();await tick();check('Seal button saves once',JSON.parse(storage.get(KEY)).progress.seals.join()==='ember');
-  el('recordSeal').click();await tick();check('Repeat seal cannot duplicate reward',JSON.parse(storage.get(KEY)).progress.seals.length===1);
-  el('leaveShrine').click();await tick();check('Return closes alcove',el('shrineView').hidden);
-  await show('ember',true);check('Reload retains seal and upper floor',JSON.parse(storage.get(KEY)).progress.seals.includes('ember')&&el('level').textContent.includes('UPPER')&&el('shrineView').hidden);
+  await show('ember');await press('KeyE');check('Use enters playable shrine',el('level').textContent.includes('Embercrest Shrine')&&JSON.parse(storage.get(KEY)).location.shrine==='ember');
+  await press('KeyD');el('save').click();await tick();check('Movement inside room does not grant a seal',JSON.parse(storage.get(KEY)).progress.seals.length===0);
+  await press('KeyM');check('M opens map and room help',!el('overlay').hidden&&!el('roomActions').hidden&&el('roomHelp').textContent.includes('Pulse Orb'));
+  check('Travel disabled inside rooms',[...el('travel').children].every(b=>b.disabled));
+  el('resetRoom').click();await tick();check('Reset resumes current room',el('overlay').hidden&&JSON.parse(storage.get(KEY)).location.room===0);
+  await show('ember',true);check('Reload restores room checkpoint',el('level').textContent.includes('Embercrest Shrine'));
+  el('pause').click();await tick();el('leaveShrine').click();await tick();check('Return restores upper Plateau',el('level').textContent.includes('UPPER')&&JSON.parse(storage.get(KEY)).location===null);
   await show('temple');await press('KeyE');check('Temple guide opens descent',JSON.parse(storage.get(KEY)).progress.exitUnlocked);
+  el('pause').click();await tick();el('upgradeHealth').click();await tick();check('Health upgrade saved',JSON.parse(storage.get(KEY)).journey.health===1&&el('hearts').getAttribute('aria-label').includes('6 of 6'));
+  el('upgradeStamina').click();await tick();check('Stamina upgrade saved',JSON.parse(storage.get(KEY)).journey.stamina===1&&el('stamina').max===125);
+  el('travel').children[0].click();await tick();check('Travel returns to discovered start',el('overlay').hidden&&JSON.parse(storage.get(KEY)).player.x===340);
   el('save').click();await tick();check('Manual save feedback',el('message').textContent.includes('saved'));
+  await show('temple');frame.style.width='390px';frame.style.height='844px';await tick();el('pause').click();await tick();for(let i=0;i<4;i++)el('upgradeHealth').click();el('resume').click();await tick();
+  check('Maximum hearts fit portrait HUD',el('hearts').getAttribute('aria-label').includes('9 of 9')&&el('hearts').getBoundingClientRect().right<=390&&el('objective').getBoundingClientRect().top>=el('pause').getBoundingClientRect().bottom);
+  const controls=[...frame.contentDocument.querySelectorAll('[data-control]')].map(b=>b.getBoundingClientRect());check('Portrait touch actions fit viewport',controls.every(b=>b.left>=0&&b.right<=390&&b.top>=0&&b.bottom<=844));
   result.textContent=checks.join('\n')+`\nALL ${checks.length} UI CHECKS PASSED`;
  }catch(error){result.textContent=checks.join('\n')+'\nFAIL '+error.stack;console.error(error)}
 };

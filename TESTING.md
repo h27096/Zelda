@@ -1,33 +1,34 @@
-# Verification · v0.4
+# Verification · v0.5
 
-## Baseline
+## Starting point
 
-Inspected and ran completed v0.3 commit `876ee0e`. All 18 existing Node tests passed before implementation, and the game rendered in the desktop browser. World, progression, bridge/underpass, both stair sets, camera, asset loader and legacy platformer are retained.
+Inspected clean main at `0568a9d`, the merged v0.4 implementation (`6e7e8e1`), repository history, current modules and tests. The v0.3/v0.2 world geometry and legacy platformer are unchanged. Shrine alcove expectations were replaced with actual room traversal; existing combat and engine tests remain in place.
 
-## Simulation checks
+## Simulation
 
-Run `npm test` with Node 22+. **33 tests pass**:
+Run `npm test` with Node 22+. **43 tests pass**.
 
-- Original movement, diagonal speed, collision, anti-tunneling, stairs/rails, elevation, separate upper/lower passage, depth ordering and camera bounds.
-- Reachability traversal through actual movement for every landmark/enemy, closed descent, full tower/seals/temple/exit progression and return after completion.
-- Sword windup, hit window, one hit per target, facing and combo queue; directional block, stamina limits, hurt frames, telegraphed enemy attacks/recovery/disengagement.
-- Bow aim/release, finite ammo, projectile damage/expiry, walls and floor/ramp separation. Input cancellation prevents unwanted shots.
-- Pulse Orb arming, area damage, player danger and floor isolation; Stillmark freeze expiry; Tether movement/collision/stamina; Frostpath crossing, occupied expiry, land-safe saves and removal after leaving.
-- Death preserves progress/equipment and clears dangerous transients. Crates block melee sight lines and reset clear of saved player/checkpoint positions.
-- Supply collection once, repair and resupply; schema-2/schema-3 migration, completed progress and original backups retained, schema-4 equipment roundtrip, malformed state rejection, storage failures and legacy key preservation.
+- All original movement, diagonal speed, collider, anti-tunneling, stairs/rails, bridge/underpass, depth sorting, camera and world reachability regressions.
+- Existing sword timing/combo, guard direction, stamina, hurt frames, enemy windup/recovery, bow release/cancellation, floor-separated projectiles and all four tool checks.
+- Full Plateau guide → tower → eight solved shrine rooms → four seals → temple → unlocked descent → return and save/load.
+- Every shrine solved and replayed through movement and actual v0.4 tool activation. `tests/helpers/shrine-play.js` supplies deterministic input routes; it never assigns completion flags or crate positions. Facing is selected directly for deterministic aim between movement segments.
+- Walls, outer boundaries, closed doors, water, early altar attempts, shared-pulse requirement, Stillmark expiry, moving weight alone failing to open a door, reward duplication and outdoor enemy isolation.
+- Room checkpoint reload/death/reset, effect clearing, safe upper-floor return, retained cache rewards and seals, upgraded healing/regen/death, bounded blessing spending and upgrade persistence.
+- Discovered-only travel, threat/shrine restrictions, safe destination/checkpoint placement and effect cleanup.
+- Schema 2/3/4 migration, original backup retention, legacy keys, schema 5 roundtrip, malformed equipment/progress/location rejection and corrupt-primary recovery.
 
-Old instant-contact/instant-sword assertions now advance through intentional attack windows. Schema expectations are updated to 4.
+## Browser
 
-## Browser checks
+Serve with `npm run serve` and open `/tests/browser.html`: **78 checks pass** in the desktop in-app Chromium browser. These exercise keyboard aliases, simultaneous joystick/sword, pointer cancellation/capture loss, bow cancellation versus release, guard, tool selection, sprint and menu input; the outdoor renderer; all eight shrine rooms at 1024×768, 768×1024, 390×844 and 844×390; complete shrine input replays; map rendering and isolated storage. Synthetic pointers stub capture only; this is not physical multitouch evidence.
 
-Serve with `npm run serve`; visit `/tests/browser.html`. **38 checks pass** in desktop Chromium: keyboard aliases, simultaneous joystick/sword, cancellation/capture loss, touch bow release versus cancellation, held guard, tool selection, sprint release, blur, four canvas sizes, both floors, original landmarks, journal map and isolated storage. Pointer capture is stubbed only for synthetic events; real capture needs hardware testing.
+Open `/tests/ui.html?run`: **18 checks pass** against the actual game entry point with isolated in-memory saves. Covers journal button/Escape/M, playable shrine entry, no unearned seal, room help, disabled indoor travel, reset, reload checkpoint, upper-floor exit, temple unlock, both upgrades, safe fast travel, manual save, nine-heart portrait HUD and touch action bounds.
 
-At `/tests/ui.html`, click **Run acceptance checks** (or use `?run`). **11 checks pass** against the real entry point: journal buttons/Escape, shrine entry/return, first/repeat seal, saved upper-floor reload, temple exit unlock and manual saving. The iframe uses isolated memory storage. Bounded timers avoid waiting on offscreen iframe animation frames.
+The real game iframe was visually inspected in landscape and 390×844 portrait. The shrine camera centers rooms horizontally on wide screens and tracks within their bounds on narrow screens. The portrait HUD uses two explicit rows to keep maximum hearts and buttons clear of the objective.
 
-The real game was visually inspected at 1024×768 and narrow portrait size. A physical iPad/Safari session and sustained frame-rate measurement were unavailable. On hardware, verify simultaneous joystick plus guard/bow, joystick sprint beyond the rim, cancelled touches, safe areas, toolbar resizing, background/resume, journal scrolling and save/reload.
+## Compatibility and remaining device checks
 
-## Compatibility and limits
+Relative production imports and entry assets use `v=0.5.0`. No runtime dependencies, build requirement or external media were added. Great Plateau world geometry and `legacy/` are unchanged. The 60 Hz fixed step, capped catch-up and 2× pixel ratio remain. Outdoor enemies pause while indoors; rooms have at most one moving crate, two waters or two targets. Effects expire and are not serialized.
 
-Production imports use `v=0.4.0` and remain relative for GitHub Pages `/Zelda/`. No dependencies or build step were added. The development server accepts `PORT` (default 8000). Legacy files are unchanged. The existing fixed 60 Hz loop, capped catch-up, 2× pixel ratio and entity culling remain. Projectiles expire; only one orb and one ice crossing exist at once, with seven enemies.
+Carrying now slows movement to 85 units/second and disables sprint so the 110-unit/second block can keep up. Tether still uses solid actor/terrain collision; turn gradually and release to refill stamina. The room reset and exit controls provide recovery from misplaced blocks.
 
-Prototype crates, ice, orbs and freezes reset on reload. Saving on ice returns to a land checkpoint. A worn practice blade remains usable with a weaker finisher. No full shrine interiors, final character art or music were added. GitHub Pages deployment and physical Safari performance are not claimed by local tests.
+Physical iPad Safari, real concurrent touches, safe-area/browser-toolbar resizing and sustained hardware frame rate still require a device session. Desktop rendering and synthetic input tests do not establish those guarantees. GitHub Pages deployment is not established by local verification; serve the root on main after merging the change.
