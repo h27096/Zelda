@@ -1,26 +1,32 @@
-# Verification
+# Verification · v0.3
 
-## Automated engine checks
+## Baseline inspected before editing
 
-Run `npm test` (Node 22+). The suite verifies normalized diagonal speed, terrain/trunk/rock/water boundaries, stair ascent and descent, solid cliff edges, ramp side rails, bridge and independent underpass support, anti-tunneling movement, depth order, camera clamps, versioned save roundtrip and backup recovery, invalid-position rejection, unavailable storage, preserved legacy saves, combat persistence, death respawn and healing.
+Cloned and ran commit `8a0efdd` (completed v0.2). All 11 engine tests and 16 browser checks passed, and the game rendered in the desktop in-app browser. The v0.2 movement/input/camera/combat/rendering architecture and original stair/bridge/underpass geometry were retained.
 
-## Browser integration checks
+## Automated checks
 
-Serve the project and open `/tests/browser.html`. The page tests the actual input/renderer modules: keyboard diagonals, overlapping keyboard aliases, blur release, pointer cancellation, joystick direction, simultaneous move + attack, lost capture, Escape with button focus, four canvas sizes (1024×768, 768×1024, 390×844, 844×390), upper-floor rendering, and persistence against isolated test storage.
+Run `npm test` (Node 22+). **18 tests pass**, including:
 
-These synthetic pointer tests exercise event handling, not physical iPad multitouch. The renderer size checks do not emulate Safari or validate the entire responsive UI.
+- Existing diagonal speed, collision, anti-tunneling, stairs/rails, cliff, upper bridge/lower passage, depth sorting, camera, combat, checkpoint, save/backup and storage-failure checks. The old single-enemy save assertion now verifies the defeated enemy is absent while newly added enemies remain.
+- A flood traversal using actual `move()` transitions: every interactive object and enemy is reachable from the start, including both upper platforms and all four shrines. No traversed state crosses the sealed descent.
+- Tower prerequisite, four seals in arbitrary order, duplicate seal prevention, temple-only hand-in, exit traversal, completion persistence and return travel.
+- Paused shrine simulation, partial-progress reload, upper-floor reload, checkpoint death preserving progress, guarded caches and duplicate treasure prevention.
+- All ponds and the southern cliff/corridor, both directions on the new stairs.
+- v0.2 migration preserving health/history, relocation around new landmarks, read-only loading, original payload backup, malformed progress rejection and recovered old backups.
 
-## Verified in this implementation environment
+## Browser checks
 
-- 11 engine tests pass.
-- 16 browser integration checks pass in the desktop Chromium-based in-app browser.
-- Main game rendered and visually inspected, including Link, terrain, trees, rock, sign, rest stone, stairs, enemy, HUD and touch controls.
-- Pause opens; Escape from focused Continue resumes; manual save displays success.
-- Main page console check showed no warnings or errors.
-- A physical iPad/Safari session and sustained device frame-rate measurement were unavailable.
+Serve the project and open `/tests/browser.html`. **29 checks pass** in desktop Chromium: keyboard aliases/diagonals, pointer cancellation and capture loss, simultaneous joystick + sword, blur release, Escape with button focus, four canvas sizes (1024×768, 768×1024, 390×844, 844×390), both floors, every new landmark type, four shrine seals, journal map and isolated save storage.
 
-## Device acceptance pass still required
+Open `/tests/ui.html` and click **Run acceptance checks**. **11 checks pass** against the real game entry point in an iframe: journal open/close by button and Escape, shrine entry, record/repeat seal, return, reload retaining the seal and upper floor, temple hand-in and manual save feedback. Each iframe uses its own in-memory storage; real browser game saves are never overwritten. Scenario buttons support visual inspection of the starting area, tower, temple and Ember shrine, plus portrait and landscape layouts.
 
-On a real iPad, check portrait/landscape, browser-toolbar resizing, safe-area spacing, drag + sword with two fingers, interrupted touch, background/resume, save/reload and private/storage-restricted browsing. On PC, walk both directions through the stairs, across and under the bridge, behind trees, into water/cliff boundaries, and defeat the enemy. Confirm upper-floor save/reload and repeat on the GitHub Pages subpath after deployment.
+## Visual/device scope
 
-A live Pages upgrade check exposed cached platformer JS/CSS being reused with new HTML. Entry assets and the ES-module graph now use the same v0.2.0 query version so returning browsers fetch matching engine files. Bump this version across the graph when deploying incompatible changes.
+The starting sanctuary, tower, temple, shrine alcove, journal/map, persistent objective, interaction prompt and controls were inspected in desktop Chromium. The game continues using a 60 Hz fixed simulation, capped catch-up, 2× maximum pixel ratio, original entity/grass culling, visible-water culling and map rendering only when the journal opens.
+
+A physical iPad/Safari session and sustained device frame-rate measurement were unavailable. Synthetic pointer checks and responsive views cannot guarantee real multitouch or Safari performance. On an iPad, verify landscape/portrait, safe areas, browser-toolbar resizing, simultaneous drag + sword, interrupted touch, background/resume, scrolling the journal and save/reload. After merging/deploying, repeat a smoke check on the actual GitHub Pages `/Zelda/` path.
+
+## Release notes
+
+Production asset URLs use `v=0.3.0` throughout to avoid mixing cached v0.2 modules with v0.3 HTML. No runtime dependency or build process was added. The legacy platformer files are unchanged. Full shrine puzzles, broader combat abilities and the region beyond the southern descent are future milestones.

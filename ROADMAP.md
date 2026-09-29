@@ -4,9 +4,9 @@
 
 Small Plateau slice, eight-direction movement, top-down collision, camera, depth sorting, separate elevation/support layers, stairs, bridge/underpass, touch and keyboard input, versioned saves, replaceable original placeholders, and one simple enemy. Previous platformer and shrine trials remain playable in `legacy/`.
 
-## v0.3 · Great Plateau
+## v0.3 · Great Plateau (implemented)
 
-Build one coherent explorable region: Shrine of Resurrection, Temple of Time, Plateau Tower, forests, ruins, ponds, camps, and four shrine entrances. Add Old Man/tutorial progression, pickups, chests, environmental interactions, and an objective-gated exit. This is a future scope, not already implemented by the v0.2 slice.
+A connected original region with Shrine of Resurrection, Temple of Time, Plateau Tower, forests, ruins, ponds, camps, treasure and four distinct shrine alcoves. Rowan guides the tower → four seals → temple hand-in → southern descent tutorial. A journal map/checklist, gated exit, completion state and schema-2 save migration are implemented. Alcoves offer a seal and rest; full shrine puzzles remain v0.5 work. The v0.2 movement, bridge/underpass, controls and architecture are retained.
 
 ## v0.4 · Combat and Sheikah Slate
 

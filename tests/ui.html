@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Plateau UI acceptance</title>
+<style>body{margin:16px;background:#152d28;color:#eee;font:14px system-ui}button{padding:9px;margin:4px}iframe{display:block;border:1px solid #a9b48d;width:1024px;height:768px;max-width:100%}pre{white-space:pre-wrap}</style>
+<h1>Plateau UI acceptance</h1><p>Isolated in-memory storage; this page never changes your game saves.</p>
+<button id="run">Run acceptance checks</button><button data-scene="start">Starting area</button><button data-scene="tower">Tower</button><button data-scene="temple">Temple</button><button data-scene="ember">Ember shrine</button>
+<button id="portrait">Portrait</button><button id="landscape">Landscape</button><pre id="result">Ready</pre><iframe title="Game under test"></iframe>
+<script type="module">
+import {freshState,KEY,VERSION} from '../src/save.js';
+const frame=document.querySelector('iframe'),result=document.querySelector('#result');
+const html=await (await fetch('../index.html')).text();
+let storage=new Map();
+const tick=()=>new Promise(resolve=>frame.contentWindow.requestAnimationFrame(()=>frame.contentWindow.requestAnimationFrame(resolve)));
+const wait=async fn=>{for(let i=0;i<120;i++){if(fn())return;await new Promise(r=>setTimeout(r,20));}throw Error('UI did not become ready')};
+async function show(scene,keep=false){
+ storage=new Map(keep?storage:[]);const store=storage;window.testStorage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)};
+ if(!keep){const s=freshState();if(scene!=='start'){s.progress.metGuide=true;s.progress.tower=true;}
+  Object.assign(s.player,({tower:{x:800,y:374,level:1},temple:{x:1512,y:1508,level:0},ember:{x:2608,y:1684,level:1}})[scene]??{});
+  if(scene==='temple')s.progress.seals=['wind','reed','root','ember'];
+  storage.clear();storage.set(KEY,JSON.stringify({...s,version:VERSION,map:'great-plateau'}));
+ }
+ frame.srcdoc=html.replace('<head>',`<head><base href="${new URL('../',location.href).href}"><script>Object.defineProperty(window,'localStorage',{value:parent.testStorage});<\/script>`);
+ await new Promise(r=>frame.onload=r);await wait(()=>frame.contentDocument.querySelector('#objective')?.textContent);await tick();
+}
+const el=id=>frame.contentDocument.getElementById(id);
+const press=async code=>{const win=frame.contentWindow,target=el('scene');target.dispatchEvent(new win.KeyboardEvent('keydown',{code,bubbles:true,cancelable:true}));await tick();target.dispatchEvent(new win.KeyboardEvent('keyup',{code,bubbles:true,cancelable:true}));await tick()};
+document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>show(b.dataset.scene));
+document.querySelector('#portrait').onclick=()=>{frame.style.width='390px';frame.style.height='844px'};
+document.querySelector('#landscape').onclick=()=>{frame.style.width='1024px';frame.style.height='768px'};
+document.querySelector('#run').onclick=async()=>{
+ const checks=[];const check=(name,value)=>{if(!value)throw Error(name);checks.push('PASS '+name);result.textContent=checks.join('\n')};
+ try{
+  await show('start');el('pause').click();await tick();check('Journal button opens objectives and map',!el('overlay').hidden&&el('objectives').children.length===8);
+  el('resume').click();await tick();check('Continue resumes',el('overlay').hidden);
+  await press('Escape');check('Escape opens journal',!el('overlay').hidden);await press('Escape');check('Escape closes journal',el('overlay').hidden);
+  await show('ember');await press('KeyE');check('Use opens shrine alcove',!el('shrineView').hidden&&el('shrineTitle').textContent==='Embercrest Shrine');
+  el('recordSeal').click();await tick();check('Seal button saves once',JSON.parse(storage.get(KEY)).progress.seals.join()==='ember');
+  el('recordSeal').click();await tick();check('Repeat seal cannot duplicate reward',JSON.parse(storage.get(KEY)).progress.seals.length===1);
+  el('leaveShrine').click();await tick();check('Return closes alcove',el('shrineView').hidden);
+  await show('ember',true);check('Reload retains seal and upper floor',JSON.parse(storage.get(KEY)).progress.seals.includes('ember')&&el('level').textContent.includes('UPPER')&&el('shrineView').hidden);
+  await show('temple');await press('KeyE');check('Temple guide opens descent',JSON.parse(storage.get(KEY)).progress.exitUnlocked);
+  el('save').click();await tick();check('Manual save feedback',el('message').textContent.includes('saved'));
+  result.textContent=checks.join('\n')+`\nALL ${checks.length} UI CHECKS PASSED`;
+ }catch(error){result.textContent=checks.join('\n')+'\nFAIL '+error.stack;console.error(error)}
+};
+await show('start');
+</script></html>

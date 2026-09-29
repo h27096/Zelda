@@ -5,10 +5,11 @@
 <canvas id="canvas" style="width:1024px;height:768px"></canvas>
 <script type="module">
 import {setupInput} from '../src/input.js';
-import {Renderer} from '../src/render.js';
+import {Renderer,drawMap} from '../src/render.js';
 import {Assets} from '../src/assets.js';
 import {Game} from '../src/game.js';
 import {save,load,clear} from '../src/save.js';
+import {objects,shrines} from '../src/world.js';
 const result=document.querySelector('#result'),checks=[];
 function check(label,test){if(!test)throw Error(label);checks.push('PASS '+label)}
 try{
@@ -27,6 +28,12 @@ try{
  const assets=new Assets();await assets.load();const game=new Game(),canvas=document.querySelector('#canvas'),renderer=new Renderer(canvas,assets);
  for(const [w,h] of [[1024,768],[768,1024],[390,844],[844,390]]){canvas.style.width=w+'px';canvas.style.height=h+'px';renderer.resize();renderer.draw(game,1/60);check('render '+w+'×'+h,canvas.width>0&&canvas.height>0)}
  Object.assign(game.player,{x:720,y:420,level:1});renderer.draw(game,1/60);check('upper-level render',true);
+ for(const o of objects.filter(o=>['shrine','tower','temple','sanctuary','camp','gate'].includes(o.kind))){Object.assign(game.player,{x:o.x,y:o.y+60,level:o.level});renderer.snap=true;renderer.draw(game,1/60);check('landmark render '+o.id,true)}
+ game.interact(objects.find(o=>o.kind==='guide'));game.interact(objects.find(o=>o.kind==='tower'));
+ for(const shrine of shrines){game.interact(shrine.kind?shrine:objects.find(o=>o.id===shrine.id));game.recordSeal();game.shrine=null;}
+ check('four shrine seals',game.progress.seals.length===4);
+ drawMap(canvas,game);check('journal map with completed shrines',true);
+ Object.assign(game.player,{x:720,y:420,level:1});
  const fake={map:new Map(),getItem(k){return this.map.get(k)??null},setItem(k,v){this.map.set(k,v)},removeItem(k){this.map.delete(k)}};
  check('browser save/load',save(game.snapshot(),fake)&&load(fake).state.player.level===1);check('clear',clear(fake)&&load(fake).state===null);
  result.textContent=checks.join('\n')+'\nALL '+checks.length+' CHECKS PASSED';

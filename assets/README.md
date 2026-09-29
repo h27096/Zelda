@@ -21,3 +21,7 @@ Current character states: `idle`, `walk`, `attack`; directions: `n`, `ne`, `e`, 
 Keep gameplay foot positions, hit radius and elevation in world/entity data. A tree canopy can be much larger than its solid trunk. Preserve transparent backgrounds for sprites. Loading is asynchronous and failures are surfaced without preventing play. Terrain drawing is currently procedural in `render.js`; a future tileset renderer can replace that visual pass independently of world support/collision.
 
 Use original or appropriately licensed assets. The game currently has no music or sound; audio integration belongs to the later original-art milestone.
+
+## v0.3 semantic placeholders
+
+The manifest now includes `guide`, `tower`, `shrine`, `temple`, `sanctuary`, `ruin`, `chest`, `pickup`, `camp` and `gate`. Their original canvas placeholders live beside the v0.2 fallbacks. World data supplies shrine colors, glyphs, names and descriptions; gameplay only uses stable IDs and interaction kinds. The renderer supplies `active` to indicate a lit tower, recorded seal, opened gate or collected cache. Future art can extend the manifest with corresponding animation states without changing collision geometry. Region and trail geometry in `src/world.js` is original and not traced from a Nintendo map.
