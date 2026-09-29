@@ -65,22 +65,22 @@ objects.push(
   {id:'highland-sign',kind:'sign',x:2336,y:1952,level:0,r:10,text:'Embercrest: climb the stairs north, then turn east. Return down the same stairs.'}
 );
 export const inside = (x,y,b,margin=0)=>x>=b.x+margin&&x<=b.x+b.w-margin&&y>=b.y+margin&&y<=b.y+b.h-margin;
-export function support(x,y,level) {
+export function support(x,y,level,ice=[]) {
   if(ramps.some(b=>inside(x,y,b))) return true;
   if(level===1) return [...surfaces,bridge].some(b=>inside(x,y,b));
   // The southern cliff has a single narrow descent. Other edges stay solid.
   if(y>exit.y && Math.abs(x-exit.x)>exit.w/2)return false;
-  return level===0 && !surfaces.some(b=>inside(x,y,b)) && !waters.some(b=>inside(x,y,b));
+  return level===0 && !surfaces.some(b=>inside(x,y,b)) && (!waters.some(b=>inside(x,y,b)) || ice.some(b=>inside(x,y,b)));
 }
 export function elevationAt(x,y,level) {
   const ramp=ramps.find(b=>inside(x,y,b));
   if(ramp) return 48*Math.max(0,Math.min(1,(ramp.y+ramp.h-y)/ramp.h));
   return level*48;
 }
-export function canStand(x,y,level,r=9) {
+export function canStand(x,y,level,r=9,ice=[]) {
   if(!Number.isFinite(x)||!Number.isFinite(y)||![0,1].includes(level))return false;
   for(const [dx,dy] of [[-r,-r],[r,-r],[-r,r],[r,r],[0,0]]) {
-    if(x+dx<32||y+dy<32||x+dx>width-32||y+dy>height-32||!support(x+dx,y+dy,level))return false;
+    if(x+dx<32||y+dy<32||x+dx>width-32||y+dy>height-32||!support(x+dx,y+dy,level,ice))return false;
   }
   return !objects.some(o=>o.kind!=='pickup' && o.level===level && Math.hypot(x-o.x,y-o.y)<r+o.r);
 }
@@ -99,8 +99,8 @@ export function move(body,dx,dy,access={exitUnlocked:false}) {
         if(y<=ramp.y+32)level=1;
         if(y>=ramp.y+ramp.h-20)level=0;
       }
-      if(canStand(x,y,level,body.r??9)){body.x=x;body.y=y;body.level=level;}
+      if(canStand(x,y,level,body.r??9,access.ice??[])){body.x=x;body.y=y;body.level=level;}
     }
   }
 }
-export const initialEnemies=()=>[[880,800],[1080,1016],[2256,1152],[2368,1024],[800,1760],[928,1648]].map(([x,y],i)=>({id:`bokoblin-${i+1}`,kind:'bokoblin',x,y,level:0,r:10,hp:3,face:'s',state:'idle',time:0,hurt:0,cooldown:0,home:{x,y}}));
+export const initialEnemies=()=>[[880,800],[1080,1016],[2256,1152],[2368,1024],[800,1760],[928,1648],[750,1100]].map(([x,y],i)=>({id:`bokoblin-${i+1}`,kind:'bokoblin',x,y,level:0,r:10,hp:3,face:'s',state:'idle',time:0,hurt:0,cooldown:0,home:{x,y,level:0}}));

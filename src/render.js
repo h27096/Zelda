@@ -1,5 +1,7 @@
-import {width,height,bridge,stairs,objects,elevationAt,surfaces,ramps,waters,regions,trails,shrines,exit} from './world.js?v=0.3.0';
-import {followCamera,depthCompare} from './camera.js?v=0.3.0';
+import {supplies} from './equipment.js?v=0.4.0';
+import {drawCombatEntity,drawActorCues} from './combat-render.js?v=0.4.0';
+import {width,height,bridge,stairs,objects,elevationAt,surfaces,ramps,waters,regions,trails,shrines,exit} from './world.js?v=0.4.0';
+import {followCamera,depthCompare} from './camera.js?v=0.4.0';
 export class Renderer {
   constructor(canvas,assets){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.assets=assets;this.camera={x:0,y:0};this.resize();}
   resize(){const box=this.canvas.getBoundingClientRect();this.cssWidth=box.width;this.cssHeight=box.height;this.dpr=Math.min(devicePixelRatio||1,2);this.canvas.width=Math.round(box.width*this.dpr);this.canvas.height=Math.round(box.height*this.dpr);this.scale=Math.max(.7,Math.min(1.8,box.width/800,box.height/520));this.viewport={width:box.width/this.scale,height:box.height/this.scale};this.snap=true;}
@@ -10,14 +12,17 @@ export class Renderer {
     ctx.fillStyle='#6f965a';ctx.fillRect(0,0,this.viewport.width,this.viewport.height);
     ctx.save();ctx.translate(-Math.round(this.camera.x),-Math.round(this.camera.y));
     this.ground(ctx,game.playTime,game.progress);
-    const entities=[...objects.filter(o=>!(o.kind==='pickup'&&game.progress.collected.includes(o.id))).map(o=>({...o,active:o.kind==='tower'?game.progress.tower:o.kind==='shrine'?game.progress.seals.includes(o.id):o.kind==='gate'?game.progress.exitUnlocked:game.progress.collected.includes(o.id)})),...game.enemies.filter(e=>e.hp>0),p].sort(depthCompare);
+    for(const ice of game.ice){ctx.fillStyle=ice.life<4?'#c7e1df':'#9cced6';ctx.fillRect(ice.x,ice.y,ice.w,ice.h);ctx.strokeStyle='#edf7e8';ctx.strokeRect(ice.x+2,ice.y+2,ice.w-4,ice.h-4);}
+    p.aiming=game.aiming;p.swingAge=game.swing?.age??-1;p.combo=game.combo;
+    const extras=[...game.crates,...supplies.filter(s=>!game.equipment.collected.includes(s.id)).map(s=>({...s,kind:'kit'})),...game.projectiles,...game.effects,...(game.bomb?[game.bomb]:[])];
+    const entities=[...extras,...objects.filter(o=>!(o.kind==='pickup'&&game.progress.collected.includes(o.id))).map(o=>({...o,active:o.kind==='tower'?game.progress.tower:o.kind==='shrine'?game.progress.seals.includes(o.id):o.kind==='gate'?game.progress.exitUnlocked:game.progress.collected.includes(o.id)})),...game.enemies.filter(e=>e.hp>0),p].sort(depthCompare);
     for(const e of entities.filter(e=>e.level===0))this.entity(ctx,e);
     // Upper surfaces occlude the lower path; upper actors/props sort by their feet.
     this.upper(ctx);
     for(const e of entities.filter(e=>e.level===1))this.entity(ctx,e);
     ctx.restore();
   }
-  entity(ctx,e){const y=e.y-elevationAt(e.x,e.y,e.level);if(e.x<this.camera.x-120||e.x>this.camera.x+this.viewport.width+120||y<this.camera.y-160||y>this.camera.y+this.viewport.height+160)return;if(e.kind==='link'&&e.hurt>0&&Math.floor(e.hurt*12)%2)return;this.assets.draw(ctx,e,e.x,y);}
+  entity(ctx,e){const y=e.y-elevationAt(e.x,e.y,e.level);if(e.x<this.camera.x-120||e.x>this.camera.x+this.viewport.width+120||y<this.camera.y-160||y>this.camera.y+this.viewport.height+160)return;if(e.kind==='link'&&e.hurt>0&&Math.floor(e.hurt*12)%2)return;if(['crate','kit','arrow','orb','impact','guard','blast','still'].includes(e.kind))drawCombatEntity(ctx,e,e.x,y);else {this.assets.draw(ctx,e,e.x,y);drawActorCues(ctx,e,e.x,y);}}
   ground(ctx,time,progress){
     ctx.fillStyle='#709957';ctx.fillRect(0,0,width,height);
     for(const r of regions){ctx.fillStyle=r.color;ctx.fillRect(r.x,r.y,r.w,r.h);}

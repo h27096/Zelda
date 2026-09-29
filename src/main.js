@@ -1,10 +1,11 @@
-import {setupInput} from './input.js?v=0.3.0';
-import {load,save,clear,freshState} from './save.js?v=0.3.0';
-import {Game} from './game.js?v=0.3.0';
-import {Assets} from './assets.js?v=0.3.0';
-import {Renderer,drawMap} from './render.js?v=0.3.0';
-import {regionAt,shrines} from './world.js?v=0.3.0';
-import {objective,journal,treasureCount} from './progression.js?v=0.3.0';
+import {toolNames} from './equipment.js?v=0.4.0';
+import {setupInput} from './input.js?v=0.4.0';
+import {load,save,clear,freshState} from './save.js?v=0.4.0';
+import {Game} from './game.js?v=0.4.0';
+import {Assets} from './assets.js?v=0.4.0';
+import {Renderer,drawMap} from './render.js?v=0.4.0';
+import {regionAt,shrines,initialEnemies} from './world.js?v=0.4.0';
+import {objective,journal,treasureCount} from './progression.js?v=0.4.0';
 const $=s=>document.querySelector(s),input=setupInput(),loaded=load();
 let game=new Game(loaded.state??freshState());
 const assets=new Assets(),renderer=new Renderer($('#scene'),assets);
@@ -15,7 +16,7 @@ let paused=false,last=0,accumulator=0,saveClock=0;
 const STEP=1/60;
 function saveProgress(show=false){const ok=save(game.snapshot());if(show||!ok)game.notice(ok?'Progress saved on this device.':'Save failed. Browser storage may be blocked or full.');return ok;}
 function pause(value=true){paused=value;input.clear();$('#overlay').hidden=!value;$('#pause').setAttribute('aria-expanded',String(value));if(value){
-  drawMap($('#atlas'),game);$('#tokens').textContent=`${treasureCount(game.progress)} trail tokens · ${game.defeated.size} / 6 enemies cleared · White dot: you`;
+  drawMap($('#atlas'),game);$('#tokens').textContent=`${treasureCount(game.progress)} trail tokens · ${game.defeated.size} / ${initialEnemies().length} enemies cleared · White dot: you`;
   $('#objectives').replaceChildren(...journal(game.progress).map(item=>{const li=document.createElement('li');li.textContent=(item.done?'✓ ':'○ ')+item.text;li.className=item.done?'done':'';return li}));$('#resume').focus({preventScroll:true});$('#overlay .panel').scrollTop=0;
 }else {document.activeElement?.blur();$('#scene').focus()}}
 let shownShrine=null;
@@ -35,6 +36,10 @@ function frame(t){
   renderer.draw(game,paused?0:dt);
   $('#hearts').textContent='♥'.repeat(game.player.hp)+'♡'.repeat(5-game.player.hp);$('#hearts').setAttribute('aria-label',`${game.player.hp} of 5 hearts`);
   $('#level').textContent=regionAt(game.player.x,game.player.y)+(game.player.level?' · UPPER':'');
+  $('#stamina').value=game.equipment.stamina;
+  $('#gear').textContent='↗ '+game.equipment.arrows+' · Blade '+game.equipment.sword+'/40';
+  $('#toolName').textContent=toolNames[game.equipment.tool];
+  document.querySelector('[data-control="tool"]').setAttribute('aria-label','Use '+toolNames[game.equipment.tool]);
   $('#objective').textContent=objective(game.progress);
   const nearby=game.nearby();$('#nearby').textContent=nearby?`E / USE · ${nearby.text.split(' · ')[0]}`:'';$('#nearby').hidden=!nearby||!!game.shrine||paused;
   syncShrine();

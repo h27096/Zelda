@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#203c35">
   <title>Plateau Quest · The Great Plateau</title>
-  <link rel="stylesheet" href="style.css?v=0.3.0">
+  <link rel="stylesheet" href="style.css?v=0.4.0">
 </head>
 <body>
   <main id="game" aria-label="Plateau Quest">
     <canvas id="scene" tabindex="0" aria-label="Great Plateau. Move with WASD or arrow keys, J to attack, E to interact. Open Journal for objectives and map."></canvas>
     <header class="hud">
-      <div class="identity"><span class="eyebrow">PLATEAU QUEST <b>v0.3</b></span><span id="level">GREAT PLATEAU</span></div>
-      <div id="hearts" aria-label="5 of 5 hearts">♥♥♥♥♥</div>
+      <div class="identity"><span class="eyebrow">PLATEAU QUEST <b>v0.4</b></span><span id="level">GREAT PLATEAU</span></div>
+      <div class="vitals"><meter id="stamina" min="0" max="100" value="100" aria-label="Stamina"></meter><span id="gear"></span></div><div id="hearts" aria-label="5 of 5 hearts">♥♥♥♥♥</div>
       <button id="save" type="button">Save</button><button id="pause" type="button" aria-label="Journal and pause" aria-expanded="false">Journal</button>
     </header>
     <div id="objective"></div>
@@ -20,15 +20,15 @@
     <div id="nearby"></div>
     <div class="controls" aria-label="Touch controls">
       <div id="joystick" aria-label="Drag to move in eight directions"><span class="cross">✥</span><span id="knob"></span></div>
-      <div class="actions"><button data-control="interact" aria-label="Interact">◇<small>USE</small></button><button data-control="attack" aria-label="Sword attack">╱<small>SWORD</small></button></div>
+      <div class="actions"><button data-control="cycle" aria-label="Select next tool">↻<small id="toolName">BOW</small></button><button data-control="tool" aria-label="Use selected tool">✦<small>TOOL</small></button><button data-control="guard" aria-label="Hold to block">▰<small>GUARD</small></button><button data-control="interact" aria-label="Interact">◇<small>USE</small></button><button data-control="attack" aria-label="Sword attack">╱<small>SWORD</small></button></div>
     </div>
-    <div class="keyboard-hint">WASD / ARROWS <span>MOVE</span> &nbsp; J <span>SWORD</span> &nbsp; E <span>USE</span></div>
+    <div class="keyboard-hint">WASD / ARROWS <span>MOVE</span> &nbsp; J <span>SWORD</span> · L <span>GUARD</span> · F <span>TOOL</span> · Q <span>SELECT</span></div>
     <div id="overlay" hidden><section class="panel" aria-label="Pause menu">
       <span class="eyebrow">THE GREAT PLATEAU · TRAIL JOURNAL</span><h1>Your trail.</h1>
       <button id="resume">Continue</button>
       <canvas id="atlas" width="768" height="576" aria-label="Plateau trail map. Shrine markers appear after lighting the tower; directions are listed below."></canvas>
       <p id="tokens"></p><ul id="objectives"></ul>
-      <p>Move: WASD / arrows or joystick<br>Sword: J / K / Space · Use: E / Enter<br>Escape: pause · Saves stay on this device.</p>
+      <p>Move: WASD / arrows or joystick<br>Sword: J / K / Space · Use: E / Enter<br>L: hold guard · Shift / joystick beyond rim: sprint · Q: next tool · F: tool<br>Bow: hold F / TOOL, steer to aim, release to fire (1 arrow).<br>Pulse orb: throw ahead, wait for arming, press again to burst. Step outside its 88-unit blast!<br>Tether: face the copper crate east of start; activate, then steer to carry it. Activate again to release.<br>Stillmark: face a foe to freeze it for 3 seconds.<br>Frostpath: face a nearby pond to form a crossing for 18 seconds. It stays while occupied. Reload returns to your checkpoint if on ice.<br>Rest stones restore hearts, stamina, at least 12 arrows, and blade condition. Worn blades still work at reduced power.<br>Trail kits: east of start, Old Road approach, west of Reedlight pond. A new sparring lookout waits southeast of start near (750, 1100); the original camps remain optional.<br>Escape: pause · Saves stay on this device.</p>
       <button id="restart">New game</button>
       <div id="confirmReset" hidden><p>Erase this top-down save and start again?</p><button id="confirmNew">Start over</button><button id="cancelReset">Keep save</button></div>
       <a href="legacy/index.html">Play the preserved platformer prototype ↗</a>
@@ -40,6 +40,6 @@
       <button id="recordSeal">Record seal &amp; heal</button><button id="leaveShrine">Return to trail</button>
     </section></div>
   </main>
-  <script type="module" src="src/main.js?v=0.3.0"></script>
+  <script type="module" src="src/main.js?v=0.4.0"></script>
 </body>
 </html>
