@@ -1,5 +1,5 @@
-import {width,height,terrace,eastBank,bridge,stairs,water,objects,elevationAt} from './world.js';
-import {followCamera,depthCompare} from './camera.js';
+import {width,height,terrace,eastBank,bridge,stairs,water,objects,elevationAt} from './world.js?v=0.2.0';
+import {followCamera,depthCompare} from './camera.js?v=0.2.0';
 export class Renderer {
   constructor(canvas,assets){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.assets=assets;this.camera={x:0,y:0};this.resize();}
   resize(){const box=this.canvas.getBoundingClientRect();this.cssWidth=box.width;this.cssHeight=box.height;this.dpr=Math.min(devicePixelRatio||1,2);this.canvas.width=Math.round(box.width*this.dpr);this.canvas.height=Math.round(box.height*this.dpr);this.scale=Math.max(.7,Math.min(1.8,box.width/800,box.height/520));this.viewport={width:box.width/this.scale,height:box.height/this.scale};this.snap=true;}

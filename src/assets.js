@@ -1,5 +1,5 @@
-import { assetManifest } from '../assets/manifest.js';
-import { directionNames } from './input.js';
+import { assetManifest } from '../assets/manifest.js?v=0.2.0';
+import { directionNames } from './input.js?v=0.2.0';
 export class Assets {
   constructor(){this.images=new Map();this.failures=[];}
   async load(){

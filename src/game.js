@@ -1,6 +1,6 @@
-import { spawn, move, initialEnemies, objects } from './world.js';
-import { movementVector, facing, directionNames } from './input.js';
-import { freshState } from './save.js';
+import { spawn, move, initialEnemies, objects } from './world.js?v=0.2.0';
+import { movementVector, facing, directionNames } from './input.js?v=0.2.0';
+import { freshState } from './save.js?v=0.2.0';
 export class Game {
   constructor(saved=freshState()){
     this.player={...saved.player,kind:'link',r:9,state:'idle',time:0,hurt:0,attack:0,cooldown:0};

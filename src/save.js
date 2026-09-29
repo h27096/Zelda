@@ -1,4 +1,4 @@
-import { spawn, canStand, initialEnemies } from './world.js';
+import { spawn, canStand, initialEnemies } from './world.js?v=0.2.0';
 export const KEY='plateau-quest-topdown', BACKUP=KEY+'-backup', VERSION=2;
 const storageDefault=()=>{try{return globalThis.localStorage}catch{return null}};
 export function freshState(){return {player:{...spawn,hp:5,face:'s'},defeated:[],checkpoint:{...spawn},playTime:0};}

@@ -1,8 +1,8 @@
-import {setupInput} from './input.js';
-import {load,save,clear,freshState} from './save.js';
-import {Game} from './game.js';
-import {Assets} from './assets.js';
-import {Renderer} from './render.js';
+import {setupInput} from './input.js?v=0.2.0';
+import {load,save,clear,freshState} from './save.js?v=0.2.0';
+import {Game} from './game.js?v=0.2.0';
+import {Assets} from './assets.js?v=0.2.0';
+import {Renderer} from './render.js?v=0.2.0';
 const $=s=>document.querySelector(s),input=setupInput(),loaded=load();
 let game=new Game(loaded.state??freshState());
 const assets=new Assets(),renderer=new Renderer($('#scene'),assets);

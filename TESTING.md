@@ -22,3 +22,5 @@ These synthetic pointer tests exercise event handling, not physical iPad multito
 ## Device acceptance pass still required
 
 On a real iPad, check portrait/landscape, browser-toolbar resizing, safe-area spacing, drag + sword with two fingers, interrupted touch, background/resume, save/reload and private/storage-restricted browsing. On PC, walk both directions through the stairs, across and under the bridge, behind trees, into water/cliff boundaries, and defeat the enemy. Confirm upper-floor save/reload and repeat on the GitHub Pages subpath after deployment.
+
+A live Pages upgrade check exposed cached platformer JS/CSS being reused with new HTML. Entry assets and the ES-module graph now use the same v0.2.0 query version so returning browsers fetch matching engine files. Bump this version across the graph when deploying incompatible changes.
