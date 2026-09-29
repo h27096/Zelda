@@ -8,7 +8,7 @@ import {freshState,KEY,VERSION} from '../src/save.js';
 const frame=document.querySelector('iframe'),result=document.querySelector('#result');
 const html=await (await fetch('../index.html')).text();
 let storage=new Map();
-const tick=()=>new Promise(resolve=>frame.contentWindow.requestAnimationFrame(()=>frame.contentWindow.requestAnimationFrame(resolve)));
+const tick=()=>new Promise(resolve=>setTimeout(resolve,100));
 const wait=async fn=>{for(let i=0;i<120;i++){if(fn())return;await new Promise(r=>setTimeout(r,20));}throw Error('UI did not become ready')};
 async function show(scene,keep=false){
  storage=new Map(keep?storage:[]);const store=storage;window.testStorage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)};
@@ -28,7 +28,7 @@ document.querySelector('#landscape').onclick=()=>{frame.style.width='1024px';fra
 document.querySelector('#run').onclick=async()=>{
  const checks=[];const check=(name,value)=>{if(!value)throw Error(name);checks.push('PASS '+name);result.textContent=checks.join('\n')};
  try{
-  await show('start');el('pause').click();await tick();check('Journal button opens objectives and map',!el('overlay').hidden&&el('objectives').children.length===8);
+  result.textContent='Running acceptance checks…';await show('start');el('pause').click();await tick();check('Journal button opens objectives and map',!el('overlay').hidden&&el('objectives').children.length===8);
   el('resume').click();await tick();check('Continue resumes',el('overlay').hidden);
   await press('Escape');check('Escape opens journal',!el('overlay').hidden);await press('Escape');check('Escape closes journal',el('overlay').hidden);
   await show('ember');await press('KeyE');check('Use opens shrine alcove',!el('shrineView').hidden&&el('shrineTitle').textContent==='Embercrest Shrine');
@@ -42,4 +42,5 @@ document.querySelector('#run').onclick=async()=>{
  }catch(error){result.textContent=checks.join('\n')+'\nFAIL '+error.stack;console.error(error)}
 };
 await show('start');
+if(location.search.includes('run'))document.querySelector('#run').click();
 </script></html>

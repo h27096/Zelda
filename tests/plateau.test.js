@@ -54,7 +54,7 @@ test('partial progress, open shrine reload and checkpoint death preserve tutoria
   const s=memory();assert.ok(save(g.snapshot(),s));const restored=new Game(load(s).state);
   assert.equal(restored.shrine,null,'reload returns outside, never into a modal softlock');
   assert.deepEqual(restored.progress.seals,['root']);
-  Object.assign(restored.player,{x:880,y:800,hp:1});restored.update(1/60,input());
+  Object.assign(restored.player,{x:880,y:800,hp:1});for(let i=0;i<30;i++)restored.update(1/60,input());
   assert.equal(restored.player.hp,5);assert.equal(restored.player.x,spawn.x);assert.deepEqual(restored.progress.seals,['root']);
 });
 
@@ -77,7 +77,7 @@ test('v0.2 migration retains history and original save backup, relocates obstruc
   const s=memory(),old={version:2,map:'plateau-slice',player:{x:980,y:345,level:1,hp:3,face:'ne'},checkpoint:{...spawn},defeated:['bokoblin-1'],playTime:123};
   s.setItem(KEY,JSON.stringify(old));const migrated=load(s).state;
   assert.deepEqual(migrated.player,old.player);assert.deepEqual(migrated.defeated,old.defeated);assert.equal(migrated.playTime,123);assert.deepEqual(migrated.progress,freshProgress());
-  assert.equal(JSON.parse(s.getItem(KEY)).version,2,'load is read-only');assert.ok(save(migrated,s));assert.equal(JSON.parse(s.getItem(BACKUP)).version,2);assert.equal(JSON.parse(s.getItem(KEY)).version,3);
+  assert.equal(JSON.parse(s.getItem(KEY)).version,2,'load is read-only');assert.ok(save(migrated,s));assert.equal(JSON.parse(s.getItem(BACKUP)).version,2);assert.equal(JSON.parse(s.getItem(KEY)).version,VERSION);
   old.player={x:800,y:320,level:1,hp:4};const relocated=validate(old);assert.equal(relocated.player.x,spawn.x);assert.equal(relocated.player.hp,4);
 });
 

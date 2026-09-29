@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset="utf-8"><title>Plateau Quest browser checks</title></head><body>
 <h1>Browser integration checks</h1><pre id="result">Running…</pre>
 <div id="joystick" style="width:120px;height:120px"><span id="knob"></span></div>
-<button data-control="attack">Sword</button><button id="menu">Menu</button>
+<button data-control="attack">Sword</button><button data-control="tool">Tool</button><button data-control="guard">Guard</button><button data-control="cycle">Select</button><button id="menu">Menu</button>
 <canvas id="canvas" style="width:1024px;height:768px"></canvas>
 <script type="module">
 import {setupInput} from '../src/input.js';
@@ -24,6 +24,14 @@ try{
  pad.dispatchEvent(new PointerEvent('pointerdown',{pointerId:5,clientX:box.x+110,clientY:box.y+60}));check('joystick right',input.vector().x>.9);
  button.dispatchEvent(new PointerEvent('pointerdown',{pointerId:6}));check('move and sword simultaneously',input.consume('attack')&&input.vector().x>.9);
  pad.dispatchEvent(new PointerEvent('lostpointercapture',{pointerId:5}));check('lost capture stops movement',input.vector().x===0);
+ const tool=document.querySelector('[data-control="tool"]'),guard=document.querySelector('[data-control="guard"]');tool.setPointerCapture=guard.setPointerCapture=()=>{};
+ input.clear();const combat=new Game();
+ key('keydown','KeyF');combat.update(1/60,input);check('keyboard bow begins aiming',combat.aiming);key('keyup','KeyF');combat.update(1/60,input);check('keyboard bow release fires once',combat.equipment.arrows===11);
+ tool.dispatchEvent(new PointerEvent('pointerdown',{pointerId:20}));combat.update(1/60,input);tool.dispatchEvent(new PointerEvent('pointerup',{pointerId:20}));tool.dispatchEvent(new PointerEvent('lostpointercapture',{pointerId:20}));combat.update(1/60,input);check('normal touch release fires bow',combat.equipment.arrows===10);
+ tool.dispatchEvent(new PointerEvent('pointerdown',{pointerId:21}));combat.update(1/60,input);tool.dispatchEvent(new PointerEvent('pointercancel',{pointerId:21}));combat.update(1/60,input);check('touch cancel does not fire bow',combat.equipment.arrows===10&&!combat.aiming);
+ guard.dispatchEvent(new PointerEvent('pointerdown',{pointerId:22}));combat.update(1/60,input);check('touch guard held',combat.player.blocking);guard.dispatchEvent(new PointerEvent('lostpointercapture',{pointerId:22}));combat.update(1/60,input);check('lost touch releases guard',!combat.player.blocking);
+ key('keydown','KeyQ');combat.update(1/60,input);key('keyup','KeyQ');check('keyboard tool selection',combat.equipment.tool==='pulse');
+ key('keydown','ShiftLeft');check('keyboard sprint held',input.active('sprint'));input.clear();check('clear releases sprint',!input.active('sprint'));
  const menu=document.querySelector('#menu');menu.focus();key('keydown','Escape',menu);check('Escape works with menu focus',input.consume('pause'));input.clear();
  const assets=new Assets();await assets.load();const game=new Game(),canvas=document.querySelector('#canvas'),renderer=new Renderer(canvas,assets);
  for(const [w,h] of [[1024,768],[768,1024],[390,844],[844,390]]){canvas.style.width=w+'px';canvas.style.height=h+'px';renderer.resize();renderer.draw(game,1/60);check('render '+w+'×'+h,canvas.width>0&&canvas.height>0)}

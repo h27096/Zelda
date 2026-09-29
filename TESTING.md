@@ -1,32 +1,33 @@
-# Verification · v0.3
+# Verification · v0.4
 
-## Baseline inspected before editing
+## Baseline
 
-Cloned and ran commit `8a0efdd` (completed v0.2). All 11 engine tests and 16 browser checks passed, and the game rendered in the desktop in-app browser. The v0.2 movement/input/camera/combat/rendering architecture and original stair/bridge/underpass geometry were retained.
+Inspected and ran completed v0.3 commit `876ee0e`. All 18 existing Node tests passed before implementation, and the game rendered in the desktop browser. World, progression, bridge/underpass, both stair sets, camera, asset loader and legacy platformer are retained.
 
-## Automated checks
+## Simulation checks
 
-Run `npm test` (Node 22+). **18 tests pass**, including:
+Run `npm test` with Node 22+. **33 tests pass**:
 
-- Existing diagonal speed, collision, anti-tunneling, stairs/rails, cliff, upper bridge/lower passage, depth sorting, camera, combat, checkpoint, save/backup and storage-failure checks. The old single-enemy save assertion now verifies the defeated enemy is absent while newly added enemies remain.
-- A flood traversal using actual `move()` transitions: every interactive object and enemy is reachable from the start, including both upper platforms and all four shrines. No traversed state crosses the sealed descent.
-- Tower prerequisite, four seals in arbitrary order, duplicate seal prevention, temple-only hand-in, exit traversal, completion persistence and return travel.
-- Paused shrine simulation, partial-progress reload, upper-floor reload, checkpoint death preserving progress, guarded caches and duplicate treasure prevention.
-- All ponds and the southern cliff/corridor, both directions on the new stairs.
-- v0.2 migration preserving health/history, relocation around new landmarks, read-only loading, original payload backup, malformed progress rejection and recovered old backups.
+- Original movement, diagonal speed, collision, anti-tunneling, stairs/rails, elevation, separate upper/lower passage, depth ordering and camera bounds.
+- Reachability traversal through actual movement for every landmark/enemy, closed descent, full tower/seals/temple/exit progression and return after completion.
+- Sword windup, hit window, one hit per target, facing and combo queue; directional block, stamina limits, hurt frames, telegraphed enemy attacks/recovery/disengagement.
+- Bow aim/release, finite ammo, projectile damage/expiry, walls and floor/ramp separation. Input cancellation prevents unwanted shots.
+- Pulse Orb arming, area damage, player danger and floor isolation; Stillmark freeze expiry; Tether movement/collision/stamina; Frostpath crossing, occupied expiry, land-safe saves and removal after leaving.
+- Death preserves progress/equipment and clears dangerous transients. Crates block melee sight lines and reset clear of saved player/checkpoint positions.
+- Supply collection once, repair and resupply; schema-2/schema-3 migration, completed progress and original backups retained, schema-4 equipment roundtrip, malformed state rejection, storage failures and legacy key preservation.
+
+Old instant-contact/instant-sword assertions now advance through intentional attack windows. Schema expectations are updated to 4.
 
 ## Browser checks
 
-Serve the project and open `/tests/browser.html`. **29 checks pass** in desktop Chromium: keyboard aliases/diagonals, pointer cancellation and capture loss, simultaneous joystick + sword, blur release, Escape with button focus, four canvas sizes (1024×768, 768×1024, 390×844, 844×390), both floors, every new landmark type, four shrine seals, journal map and isolated save storage.
+Serve with `npm run serve`; visit `/tests/browser.html`. **38 checks pass** in desktop Chromium: keyboard aliases, simultaneous joystick/sword, cancellation/capture loss, touch bow release versus cancellation, held guard, tool selection, sprint release, blur, four canvas sizes, both floors, original landmarks, journal map and isolated storage. Pointer capture is stubbed only for synthetic events; real capture needs hardware testing.
 
-Open `/tests/ui.html` and click **Run acceptance checks**. **11 checks pass** against the real game entry point in an iframe: journal open/close by button and Escape, shrine entry, record/repeat seal, return, reload retaining the seal and upper floor, temple hand-in and manual save feedback. Each iframe uses its own in-memory storage; real browser game saves are never overwritten. Scenario buttons support visual inspection of the starting area, tower, temple and Ember shrine, plus portrait and landscape layouts.
+At `/tests/ui.html`, click **Run acceptance checks** (or use `?run`). **11 checks pass** against the real entry point: journal buttons/Escape, shrine entry/return, first/repeat seal, saved upper-floor reload, temple exit unlock and manual saving. The iframe uses isolated memory storage. Bounded timers avoid waiting on offscreen iframe animation frames.
 
-## Visual/device scope
+The real game was visually inspected at 1024×768 and narrow portrait size. A physical iPad/Safari session and sustained frame-rate measurement were unavailable. On hardware, verify simultaneous joystick plus guard/bow, joystick sprint beyond the rim, cancelled touches, safe areas, toolbar resizing, background/resume, journal scrolling and save/reload.
 
-The starting sanctuary, tower, temple, shrine alcove, journal/map, persistent objective, interaction prompt and controls were inspected in desktop Chromium. The game continues using a 60 Hz fixed simulation, capped catch-up, 2× maximum pixel ratio, original entity/grass culling, visible-water culling and map rendering only when the journal opens.
+## Compatibility and limits
 
-A physical iPad/Safari session and sustained device frame-rate measurement were unavailable. Synthetic pointer checks and responsive views cannot guarantee real multitouch or Safari performance. On an iPad, verify landscape/portrait, safe areas, browser-toolbar resizing, simultaneous drag + sword, interrupted touch, background/resume, scrolling the journal and save/reload. After merging/deploying, repeat a smoke check on the actual GitHub Pages `/Zelda/` path.
+Production imports use `v=0.4.0` and remain relative for GitHub Pages `/Zelda/`. No dependencies or build step were added. The development server accepts `PORT` (default 8000). Legacy files are unchanged. The existing fixed 60 Hz loop, capped catch-up, 2× pixel ratio and entity culling remain. Projectiles expire; only one orb and one ice crossing exist at once, with seven enemies.
 
-## Release notes
-
-Production asset URLs use `v=0.3.0` throughout to avoid mixing cached v0.2 modules with v0.3 HTML. No runtime dependency or build process was added. The legacy platformer files are unchanged. Full shrine puzzles, broader combat abilities and the region beyond the southern descent are future milestones.
+Prototype crates, ice, orbs and freezes reset on reload. Saving on ice returns to a land checkpoint. A worn practice blade remains usable with a weaker finisher. No full shrine interiors, final character art or music were added. GitHub Pages deployment and physical Safari performance are not claimed by local tests.

@@ -8,9 +8,9 @@ Small Plateau slice, eight-direction movement, top-down collision, camera, depth
 
 A connected original region with Shrine of Resurrection, Temple of Time, Plateau Tower, forests, ruins, ponds, camps, treasure and four distinct shrine alcoves. Rowan guides the tower → four seals → temple hand-in → southern descent tutorial. A journal map/checklist, gated exit, completion state and schema-2 save migration are implemented. Alcoves offer a seal and rest; full shrine puzzles remain v0.5 work. The v0.2 movement, bridge/underpass, controls and architecture are retained.
 
-## v0.4 · Combat and Sheikah Slate
+## v0.4 · Combat and original trail tools (implemented)
 
-Sword combos, shield, bow/arrows, bombs, 2D adaptations of Magnesis/Stasis/Cryonis, stamina, richer enemy behavior, knockback, weapon pickups and durability. Keep adaptations that are enjoyable in top-down play.
+Timed three-strike sword chains, directional stamina-limited guarding, aim/release bow and finite arrows, remote Pulse Orbs, collision-aware Tether crates, Stillmark suspension, and Frostpath water crossings. Enemy notice/approach/windup/recovery/return states, invulnerability, knockback and checkpoint respawn. Supply kits, practice blade condition and repair, compact touch selection, keyboard parity, schema-4 migration and modular ability APIs. The v0.3 world, progression and original geometry remain intact. Physical iPad Safari verification is still pending.
 
 ## v0.5 · Shrines and progression
 
