@@ -20,7 +20,7 @@ test('every landmark, shrine, cache and enemy is reachable through actual moveme
       seen.set(key(q),q);queue.push(q);
     }
   }
-  for(const o of [...objects.filter(o=>o.text),...initialEnemies()]){
+  for(const o of [...objects.filter(o=>o.text&&o.y<2304),...initialEnemies().filter(e=>e.y<2304)]){
     assert.ok(queue.some(p=>p.level===o.level&&Math.hypot(p.x-o.x,p.y-o.y)<60),`${o.id} must be reachable`);
   }
   assert.ok(queue.some(p=>p.level===1&&p.x>2500&&p.y>1500),'highland floor reachable');

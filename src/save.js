@@ -1,19 +1,22 @@
-import {freshEquipment,validateEquipment} from './equipment.js?v=0.5.0';
-import { spawn, canStand, initialEnemies, exit } from './world.js?v=0.5.0';
-import {freshProgress,validateProgress} from './progression.js?v=0.5.0';
-import {freshJourney,validateJourney,migrateJourney} from './journey.js?v=0.5.0';
-import {validLocation} from './shrines.js?v=0.5.0';
-export const KEY='plateau-quest-topdown', BACKUP=KEY+'-backup', VERSION=5;
+import {freshAdventure,validateAdventure,migrateAdventure} from './adventure.js?v=0.6.0';
+import {freshEquipment,validateEquipment} from './equipment.js?v=0.6.0';
+import { spawn, canStand, initialEnemies, exit } from './world.js?v=0.6.0';
+import {freshProgress,validateProgress} from './progression.js?v=0.6.0';
+import {freshJourney,validateJourney,migrateJourney} from './journey.js?v=0.6.0';
+import {validLocation} from './shrines.js?v=0.6.0';
+export const KEY='plateau-quest-topdown', BACKUP=KEY+'-backup', VERSION=6;
 const storageDefault=()=>{try{return globalThis.localStorage}catch{return null}};
-export function freshState(){return {journey:freshJourney(),location:null,equipment:freshEquipment(),player:{...spawn,hp:5,face:'s'},defeated:[],checkpoint:{...spawn},playTime:0,progress:freshProgress()};}
+export function freshState(){return {adventure:freshAdventure(),journey:freshJourney(),location:null,equipment:freshEquipment(),player:{...spawn,hp:5,face:'s'},defeated:[],checkpoint:{...spawn},playTime:0,progress:freshProgress()};}
 export function validate(data){
   const migrating=data?.version===2&&data.map==='plateau-slice';
-  if(!migrating&&(![3,4,VERSION].includes(data?.version)||data.map!=='great-plateau'))return null;
+  if(!migrating&&(![3,4,5,VERSION].includes(data?.version)||data.map!=='great-plateau'))return null;
   let p=data.player,c=data.checkpoint;
   const progress=migrating?freshProgress():validateProgress(data.progress);
   if(!progress)return null;
   const journey=data.version<5?migrateJourney(progress):validateJourney(data.journey,progress);
   if(!journey)return null;
+  const adventure=data.version<6?migrateAdventure({progress,journey}):validateAdventure(data.adventure);
+  if(!adventure)return null;
   const location=data.version<5?null:data.location;
   if(!validLocation(location,progress,journey))return null;
   const equipment=data.version<4?freshEquipment():validateEquipment(data.equipment,100+25*journey.stamina);
@@ -30,7 +33,7 @@ export function validate(data){
   if(!progress.exitUnlocked&&(p.y+9>exit.y||c.y+9>exit.y))return null;
   const ids=initialEnemies().map(e=>e.id);
   if(!Array.isArray(data.defeated)||data.defeated.some(id=>!ids.includes(id)))return null;
-  return {journey,location:location?{shrine:location.shrine,room:location.room}:null,equipment,player:{x:p.x,y:p.y,level:p.level,hp:p.hp,face:['n','ne','e','se','s','sw','w','nw'].includes(p.face)?p.face:'s'},checkpoint:{x:c.x,y:c.y,level:c.level},defeated:[...new Set(data.defeated)],playTime:Number.isFinite(data.playTime)&&data.playTime>=0?data.playTime:0,progress};
+  return {adventure,journey,location:location?{shrine:location.shrine,room:location.room}:null,equipment,player:{x:p.x,y:p.y,level:p.level,hp:p.hp,face:['n','ne','e','se','s','sw','w','nw'].includes(p.face)?p.face:'s'},checkpoint:{x:c.x,y:c.y,level:c.level},defeated:[...new Set(data.defeated)],playTime:Number.isFinite(data.playTime)&&data.playTime>=0?data.playTime:0,progress};
 }
 export function load(storage=storageDefault()){
   if(!storage)return {state:null,status:'unavailable'};

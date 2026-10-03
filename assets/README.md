@@ -1,5 +1,15 @@
 # Replaceable sprites
 
+Wildbound v0.6 intentionally keeps placeholders. The user's final player sprites,
+animations, music and SFX are postponed until ready. Keep the existing `link` and
+`bokoblin` technical keys for compatibility; they are not visible character names.
+The expansion adds `npc`, `house`, `forage`, `echo`, `discovery` and `cooking`
+semantic kinds. Add optional `idle.s` clips for these to the manifest; absent or
+failed images continue to use procedural placeholders. NPC definitions carry
+names/colors separately from stats, dialogue and collision. Future per-character
+art can supply a separate visual key while retaining the shared `npc` interaction
+kind. Audio is currently absent and requires no assets to run.
+
 Edit `assets/manifest.js` and place your own image files in this directory. Paths in `src` are relative to `assets/`, including on GitHub Pages. No gameplay code needs to change.
 
 Example definition inside `assetManifest.link.animations`:
