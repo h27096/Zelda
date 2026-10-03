@@ -1,5 +1,5 @@
-import { assetManifest } from '../assets/manifest.js?v=0.5.0';
-import { directionNames } from './input.js?v=0.5.0';
+import { assetManifest } from '../assets/manifest.js?v=0.6.0';
+import { directionNames } from './input.js?v=0.6.0';
 export class Assets {
   constructor(){this.images=new Map();this.failures=[];}
   async load(){
@@ -15,6 +15,14 @@ export class Assets {
 }
 function ellipse(ctx,x,y,rx,ry,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}
 function placeholder(ctx,e,x,y){
+  if(e.kind==='npc'){
+    ellipse(ctx,x,y,14,6,'#183b364d');ctx.fillStyle=e.color;ctx.fillRect(x-10,y-28,20,24);ctx.fillStyle='#e5bd9c';ctx.fillRect(x-8,y-42,16,15);ctx.fillStyle='#534a46';ctx.fillRect(x-10,y-47,20,8);ctx.fillStyle='#f4e6be';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText(e.name,x,y-55);ctx.textAlign='start';return;
+  }
+  if(e.kind==='house'){ctx.fillStyle='#c0ad85';ctx.fillRect(x-45,y-66,90,66);ctx.fillStyle='#754f45';ctx.beginPath();ctx.moveTo(x-56,y-64);ctx.lineTo(x,y-106);ctx.lineTo(x+56,y-64);ctx.fill();ctx.fillStyle='#3b5147';ctx.fillRect(x-12,y-32,24,32);ctx.fillStyle='#efce83';ctx.fillRect(x+24,y-47,12,15);return;}
+  if(e.kind==='forage'){ellipse(ctx,x,y,14,5,'#253c3244');ctx.fillStyle=e.item==='berry'?'#dc937e':e.item==='reed'?'#d4cd91':'#d6a373';ctx.fillRect(x-8,y-16,16,14);ctx.fillStyle='#315b44';ctx.fillRect(x-2,y-26,5,12);return;}
+  if(e.kind==='echo'){ctx.fillStyle='#d9c47c';ctx.fillRect(x-10,y-10,20,10);ctx.fillRect(x-6,y-19,12,9);ctx.fillRect(x-3,y-26,6,7);return;}
+  if(e.kind==='discovery'){ctx.fillStyle='#687f78';ctx.fillRect(x-15,y-40,30,40);ctx.fillStyle='#b4dfd5';ctx.fillRect(x-7,y-55,14,20);return;}
+  if(e.kind==='cooking'){placeholder(ctx,{kind:'camp'},x,y);ctx.fillStyle='#3d4545';ctx.fillRect(x-16,y-26,32,14);return;}
   if(e.kind==='guide'){
     ellipse(ctx,x,y,15,6,'#183b364d');ctx.fillStyle='#ad956a';ctx.fillRect(x-12,y-30,24,29);ctx.fillStyle='#ddc4a0';ctx.fillRect(x-8,y-43,16,15);ctx.fillStyle='#dddac0';ctx.fillRect(x-9,y-34,18,13);ctx.fillStyle='#695d50';ctx.fillRect(x-11,y-48,22,9);ctx.fillRect(x+16,y-32,4,33);ctx.fillStyle='#efd09b';ctx.fillRect(x+12,y-21,12,12);return;
   }

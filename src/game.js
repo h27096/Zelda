@@ -1,15 +1,19 @@
-import {freshEquipment,supplies,tools} from './equipment.js?v=0.5.0';
-import {updateCombat,distance,samePlane,spend} from './combat.js?v=0.5.0';
-import {updateAbilities} from './abilities.js?v=0.5.0';
-import {canStand} from './world.js?v=0.5.0';
-import { move, initialEnemies, objects, shrines, exit } from './world.js?v=0.5.0';
-import {freshProgress,objective} from './progression.js?v=0.5.0';
-import { facing } from './input.js?v=0.5.0';
-import { freshState } from './save.js?v=0.5.0';
-import {freshJourney,maxHearts,maxStamina,discover} from './journey.js?v=0.5.0';
-import {shrineDefinitions,makeRoom,roomCanStand,roomLine,roomObjects,updateRoom} from './shrines.js?v=0.5.0';
+import {freshAdventure,availableObject,interactAdventure,awardCoins,updateRegion,gearStat} from './adventure.js?v=0.6.0';
+import {hazards} from './content.js?v=0.6.0';
+import {hurtPlayer} from './combat.js?v=0.6.0';
+import {freshEquipment,supplies,tools} from './equipment.js?v=0.6.0';
+import {updateCombat,distance,samePlane,spend} from './combat.js?v=0.6.0';
+import {updateAbilities} from './abilities.js?v=0.6.0';
+import {canStand} from './world.js?v=0.6.0';
+import { move, initialEnemies, objects, shrines, exit } from './world.js?v=0.6.0';
+import {freshProgress,objective} from './progression.js?v=0.6.0';
+import { facing } from './input.js?v=0.6.0';
+import { freshState } from './save.js?v=0.6.0';
+import {freshJourney,maxHearts,maxStamina,discover} from './journey.js?v=0.6.0';
+import {shrineDefinitions,makeRoom,roomCanStand,roomLine,roomObjects,updateRoom} from './shrines.js?v=0.6.0';
 export class Game {
   constructor(saved=freshState()){
+    this.adventure=structuredClone(saved.adventure??freshAdventure());this.panelRequest=null;
     this.player={...saved.player,kind:'link',r:9,state:'idle',time:0,hurt:0,attack:0,cooldown:0};
     this.checkpoint={...saved.checkpoint};this.defeated=new Set(saved.defeated);this.playTime=saved.playTime;
     this.equipment=structuredClone(saved.equipment??freshEquipment());
@@ -18,7 +22,7 @@ export class Game {
     this.journey=structuredClone(saved.journey??freshJourney());this.room=null;this.outdoor=null;
     this.resetCrates();
     this.progress=structuredClone(saved.progress??freshProgress());this.shrine=null;
-    this.enemies=initialEnemies().filter(e=>!this.defeated.has(e.id));this.message='v0.5 · Four tool trials await. Journal / M: map, travel and blessings. E / USE: enter and interact.';this.messageTime=9;this.needsSave=false;
+    this.enemies=initialEnemies().filter(e=>!this.defeated.has(e.id));this.message='WILDBOUND v0.6 · Four shrine trials open the southern descent. Journal / M: map, quests and pack. E / USE: talk, gather and explore.';this.messageTime=9;this.needsSave=false;
     if(saved.location)this.enterShrine(saved.location.shrine,saved.location.room);
   }
   get maxHearts(){return maxHearts(this)}
@@ -66,8 +70,8 @@ export class Game {
     }
   }
   notice(text){this.message=text;this.messageTime=text.length>90?12:7;}
-  snapshot(){const safe=this.shrine?this.outdoor.position:canStand(this.player.x,this.player.y,this.player.level)?this.player:this.checkpoint;return {journey:structuredClone(this.journey),location:this.shrine?{shrine:this.shrine,room:this.room.index}:null,equipment:structuredClone(this.equipment),player:{x:safe.x,y:safe.y,level:safe.level,hp:this.player.hp,face:this.player.face},checkpoint:{...this.checkpoint},defeated:[...this.defeated],playTime:this.playTime,progress:structuredClone(this.progress)};}
-  nearby(){const p=this.player;return (this.room?roomObjects(this):objects).filter(o=>o.text&&o.level===p.level&&Math.hypot(o.x-p.x,o.y-p.y)<(this.room?48:70)&&!(o.kind==='pickup'&&this.progress.collected.includes(o.id))&&(!this.room||roomLine(this.room,p,o))).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];}
+  snapshot(){const safe=this.shrine?this.outdoor.position:canStand(this.player.x,this.player.y,this.player.level)?this.player:this.checkpoint;return {adventure:structuredClone(this.adventure),journey:structuredClone(this.journey),location:this.shrine?{shrine:this.shrine,room:this.room.index}:null,equipment:structuredClone(this.equipment),player:{x:safe.x,y:safe.y,level:safe.level,hp:this.player.hp,face:this.player.face},checkpoint:{...this.checkpoint},defeated:[...this.defeated],playTime:this.playTime,progress:structuredClone(this.progress)};}
+  nearby(){const p=this.player;return (this.room?roomObjects(this):objects).filter(o=>availableObject(this,o)&&o.text&&o.level===p.level&&Math.hypot(o.x-p.x,o.y-p.y)<(this.room?48:70)&&!(o.kind==='pickup'&&this.progress.collected.includes(o.id))&&(!this.room||roomLine(this.room,p,o))).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];}
   interact(o){
     if(this.room){
       if(!roomObjects(this).some(item=>item.id===o.id)||Math.hypot(o.x-this.player.x,o.y-this.player.y)>=48||!roomLine(this.room,this.player,o))return;
@@ -78,14 +82,15 @@ export class Game {
         if(this.room.index<shrineDefinitions[this.shrine].rooms.length-1)this.setRoom(this.room.index+1);else this.recordSeal();
       }else if(o.kind==='chest'){
         if(this.journey.treasures.includes(o.id)){this.notice('This cache is already empty.');return;}
-        this.journey.treasures.push(o.id);this.equipment.arrows=Math.min(30,this.equipment.arrows+5);this.player.hp=Math.min(this.maxHearts,this.player.hp+2);this.needsSave=true;this.notice('Shrine cache · 5 trail tokens, 5 arrows and two hearts.');
+        this.journey.treasures.push(o.id);awardCoins(this,5);this.equipment.arrows=Math.min(30,this.equipment.arrows+5);this.player.hp=Math.min(this.maxHearts,this.player.hp+2);this.needsSave=true;this.notice('Shrine cache · 5 trail tokens, 5 arrows and two hearts.');
       }return;
     }
+    if(interactAdventure(this,o))return;
     const p=this.progress;
     if(o.kind==='guide'){
       if(!p.metGuide){p.metGuide=true;this.notice('Rowan: These trails need a keeper. Climb the northern stairs and light the tower. Its beacon will guide you to four quiet shrines.');}
       else if(p.seals.length===4&&!p.exitUnlocked){
-        if(o.id!=='rowan-temple'){this.notice('Rowan: You found all four seals! Meet me at the Temple of Time, in the center of the Plateau.');return;}
+        if(o.id!=='rowan-temple'){this.notice('Rowan: You found all four seals! Meet me at the Lantern Temple, in the center of the Plateau.');return;}
         p.exitUnlocked=true;this.notice('Rowan: Wind, water, roots, and embers — you know this land now. I have opened the southern descent. Follow the trail beyond the temple.');
       }else this.notice(`Rowan: ${objective(p)}`);
     }else if(o.kind==='tower'){
@@ -98,7 +103,7 @@ export class Game {
     }else if(['chest','pickup'].includes(o.kind)){
       if(p.collected.includes(o.id)){this.notice('This cache is empty. Its trail tokens are already in your journal.');return;}
       if(o.kind==='chest'&&this.enemies.some(e=>e.hp>0&&e.level===o.level&&Math.hypot(e.home.x-o.x,e.home.y-o.y)<180)){this.notice('The cache is guarded. Clear the nearby camp first.');return;}
-      p.collected.push(o.id);this.player.hp=Math.min(this.maxHearts,this.player.hp+2);this.notice(`${o.kind==='chest'?'Cache opened':'Trail fruit collected'} · +${o.value} trail tokens. Two hearts restored.`);
+      p.collected.push(o.id);awardCoins(this,o.value??0);this.player.hp=Math.min(this.maxHearts,this.player.hp+2);this.notice(`${o.kind==='chest'?'Cache opened':'Trail fruit collected'} · +${o.value} trail tokens. Two hearts restored.`);
     }else{this.notice(o.text);if(o.kind==='checkpoint'){discover(this,o.id==='camp-stone'?'start':o.id);this.player.hp=this.maxHearts;this.equipment.stamina=this.maxStamina;this.equipment.sword=40;this.equipment.arrows=Math.max(12,this.equipment.arrows);this.checkpoint={x:this.player.x,y:this.player.y,level:this.player.level};}}
     this.needsSave=true;
   }
@@ -120,11 +125,14 @@ export class Game {
     this.regenDelay=Math.max(0,this.regenDelay-dt);
     if(!p.blocking&&!this.aiming&&!this.heldObject&&this.regenDelay===0)this.equipment.stamina=Math.min(this.maxStamina,this.equipment.stamina+24*dt);
     const speed=this.aiming?0:p.blocking?65:this.swing||this.heldObject?85:sprint?215:150;
-    this.moveBody(p,v.x*speed*dt,v.y*speed*dt);
+    const terrain=this.room?null:hazards.find(h=>p.level===0&&p.x>=h.x&&p.x<=h.x+h.w&&p.y>=h.y&&p.y<=h.y+h.h);
+    this.moveBody(p,v.x*speed*dt*(terrain?.slow??1),v.y*speed*dt*(terrain?.slow??1));
+    if(terrain?.damage&&!gearStat(this,'defense'))hurtPlayer(this,{...p,x:p.x-1},terrain.damage,false);
+    updateRegion(this);
     for(const effect of this.effects)effect.life-=dt;this.effects=this.effects.filter(e=>e.life>0);
     p.state=p.attack>0?'attack':(v.x||v.y?'walk':'idle');p.time+=dt;
     if(!this.room&&!this.progress.exitUnlocked&&p.y>exit.y-36&&v.y>0&&this.messageTime<=0)this.notice(`Descent sealed · ${objective(this.progress)}`);
-    if(!this.room&&this.progress.exitUnlocked&&!this.progress.completed&&p.y>exit.y+80){this.progress.completed=true;this.needsSave=true;this.notice('The Great Plateau is complete. The road onward awaits a future chapter. You can return and explore freely.');}
+    if(!this.room&&this.progress.exitUnlocked&&!this.progress.completed&&p.y>exit.y+80){this.progress.completed=true;this.needsSave=true;this.notice('The Great Plateau is complete. Follow the descent south to Hearthstead and the wider world.');}
     updateAbilities(this,dt,input);
     updateCombat(this,dt,input);
     updateRoom(this,dt);

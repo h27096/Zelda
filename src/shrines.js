@@ -1,4 +1,4 @@
-import {inside} from './world.js?v=0.5.0';
+import {inside} from './world.js?v=0.6.0';
 
 const spawn={x:80,y:250,level:0};
 const divider=[{x:310,y:24,w:20,h:182},{x:310,y:294,w:20,h:162}];

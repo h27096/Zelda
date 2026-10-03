@@ -1,8 +1,10 @@
-import {supplies} from './equipment.js?v=0.5.0';
-import {drawCombatEntity,drawActorCues} from './combat-render.js?v=0.5.0';
-import {width,height,bridge,stairs,objects,elevationAt,surfaces,ramps,waters,regions,trails,shrines,exit} from './world.js?v=0.5.0';
-import {followCamera,depthCompare} from './camera.js?v=0.5.0';
-import {drawShrine} from './shrine-render.js?v=0.5.0';
+import {hazards,expansionDestinations,worldRegions,landmarks} from './content.js?v=0.6.0';
+import {availableObject} from './adventure.js?v=0.6.0';
+import {supplies} from './equipment.js?v=0.6.0';
+import {drawCombatEntity,drawActorCues} from './combat-render.js?v=0.6.0';
+import {width,height,bridge,stairs,objects,elevationAt,surfaces,ramps,waters,regions,trails,shrines,exit} from './world.js?v=0.6.0';
+import {followCamera,depthCompare} from './camera.js?v=0.6.0';
+import {drawShrine} from './shrine-render.js?v=0.6.0';
 export class Renderer {
   constructor(canvas,assets){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.assets=assets;this.camera={x:0,y:0};this.resize();}
   resize(){const box=this.canvas.getBoundingClientRect();this.cssWidth=box.width;this.cssHeight=box.height;this.dpr=Math.min(devicePixelRatio||1,2);this.canvas.width=Math.round(box.width*this.dpr);this.canvas.height=Math.round(box.height*this.dpr);this.scale=Math.max(.7,Math.min(1.8,box.width/800,box.height/520));this.viewport={width:box.width/this.scale,height:box.height/this.scale};this.snap=true;}
@@ -17,7 +19,7 @@ export class Renderer {
     for(const ice of game.ice){ctx.fillStyle=ice.life<4?'#c7e1df':'#9cced6';ctx.fillRect(ice.x,ice.y,ice.w,ice.h);ctx.strokeStyle='#edf7e8';ctx.strokeRect(ice.x+2,ice.y+2,ice.w-4,ice.h-4);}
     p.aiming=game.aiming;p.swingAge=game.swing?.age??-1;p.combo=game.combo;
     const extras=[...game.crates,...supplies.filter(s=>!game.equipment.collected.includes(s.id)).map(s=>({...s,kind:'kit'})),...game.projectiles,...game.effects,...(game.bomb?[game.bomb]:[])];
-    const entities=[...extras,...objects.filter(o=>!(o.kind==='pickup'&&game.progress.collected.includes(o.id))).map(o=>({...o,active:o.kind==='tower'?game.progress.tower:o.kind==='shrine'?game.progress.seals.includes(o.id):o.kind==='gate'?game.progress.exitUnlocked:game.progress.collected.includes(o.id)})),...game.enemies.filter(e=>e.hp>0),p].sort(depthCompare);
+    const entities=[...extras,...objects.filter(o=>availableObject(game,o)&&!(o.kind==='pickup'&&game.progress.collected.includes(o.id))).map(o=>({...o,active:o.kind==='tower'?game.progress.tower:o.kind==='shrine'?game.progress.seals.includes(o.id):o.kind==='gate'?game.progress.exitUnlocked:game.progress.collected.includes(o.id)})),...game.enemies.filter(e=>e.hp>0),p].sort(depthCompare);
     for(const e of entities.filter(e=>e.level===0))this.entity(ctx,e);
     // Upper surfaces occlude the lower path; upper actors/props sort by their feet.
     this.upper(ctx);
@@ -30,6 +32,7 @@ export class Renderer {
     for(const r of regions){ctx.fillStyle=r.color;ctx.fillRect(r.x,r.y,r.w,r.h);}
     const left=Math.max(32,Math.floor(this.camera.x/32)*32),top=Math.max(32,Math.floor(this.camera.y/32)*32);
     for(let y=top;y<Math.min(height-32,this.camera.y+this.viewport.height+32);y+=32)for(let x=left;x<Math.min(width-32,this.camera.x+this.viewport.width+32);x+=32){const hash=(x*17+y*31)%97;ctx.fillStyle=hash<45?'#80a562':'#668f51';ctx.fillRect(x+hash%21,y+hash%17,3,5);if(hash<18){ctx.fillStyle='#d3d79b';ctx.fillRect(x+15,y+9,3,3)}}
+    for(const h of hazards){ctx.fillStyle=h.color;ctx.fillRect(h.x,h.y,h.w,h.h);ctx.fillStyle='#f0d7ae';ctx.font='11px system-ui';ctx.fillText(h.label,h.x+8,h.y+20);}
     ctx.strokeStyle='#b5aa76';ctx.lineWidth=56;ctx.lineCap='round';
     for(const trail of trails){ctx.beginPath();trail.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();}
     for(const water of waters){
@@ -66,7 +69,7 @@ export class Renderer {
 
 // Journal map is drawn only when opened, using the actual world data.
 export function drawMap(canvas,game){
-  const ctx=canvas.getContext('2d'),s=canvas.width/width;
+  const ctx=canvas.getContext('2d'),s=Math.min(canvas.width/width,canvas.height/height);
   ctx.clearRect(0,0,canvas.width,canvas.height);ctx.save();ctx.scale(s,s);
   ctx.fillStyle='#647a58';ctx.fillRect(0,0,width,height);
   for(const r of regions){ctx.fillStyle=r.color;ctx.fillRect(r.x,r.y,r.w,r.h);}
@@ -75,7 +78,8 @@ export function drawMap(canvas,game){
   for(const w of waters){ctx.fillStyle='#568d9b';ctx.fillRect(w.x,w.y,w.w,w.h);}
   for(const b of surfaces){ctx.strokeStyle='#e3d3a4';ctx.lineWidth=12;ctx.strokeRect(b.x,b.y,b.w,b.h);}
   ctx.fillStyle='#d5b284';ctx.fillRect(bridge.x,bridge.y,bridge.w,bridge.h);
-  const points=[{x:340,y:700,name:'Start'},{x:800,y:320,name:'Tower'},{x:1456,y:1440,name:'Temple'},{x:1536,y:2080,name:game.progress.exitUnlocked?'Descent open':'Descent sealed'},...(game.progress.tower?shrines.map(r=>({...r,name:r.name.replace(' Shrine',''),done:game.progress.seals.includes(r.id)})):[])];
+  for(const r of worldRegions.slice(1))if(!game.adventure.regions.includes(r.id)){ctx.fillStyle='#152c29ef';ctx.fillRect(r.x,r.y,r.w,r.h);}
+  const points=[...landmarks.filter(d=>game.adventure.discoveries.includes(d.id)),...expansionDestinations.filter(d=>game.journey.discovered.includes(d.id)),{x:340,y:700,name:'Start'},{x:800,y:320,name:'Tower'},{x:1456,y:1440,name:'Temple'},{x:1536,y:2080,name:game.progress.exitUnlocked?'Descent open':'Descent sealed'},...(game.progress.tower?shrines.map(r=>({...r,name:r.name.replace(' Shrine',''),done:game.progress.seals.includes(r.id)})):[])];
   ctx.font='bold 90px system-ui';ctx.textAlign='center';
   for(const p of points){ctx.fillStyle=p.done?'#b6e9ae':'#fff0c3';ctx.beginPath();ctx.arc(p.x,p.y,25,0,Math.PI*2);ctx.fill();ctx.fillStyle='#172f2a';ctx.fillText((p.done?'✓ ':'')+p.name,p.x,p.y-48);}
   const position=game.outdoor?.position??game.player;

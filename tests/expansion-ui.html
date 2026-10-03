@@ -1,0 +1,56 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Wildbound v0.6 acceptance</title>
+<style>body{margin:16px;background:#152d28;color:#eee;font:14px system-ui}button{padding:12px;margin:4px}iframe{display:block;border:1px solid #a9b48d;width:1024px;height:768px;max-width:100%}pre{white-space:pre-wrap}</style>
+<h1>Wildbound v0.6 acceptance</h1><p>Isolated test saves. The real game’s browser storage is never read or written.</p>
+<button id="run">Run expansion checks</button><button data-scene="mara">Hearthstead</button><button data-scene="glass-bell">Glassfen</button><button data-scene="survey-cairn">Copperwind</button><button data-scene="ivo">Merchant</button><button data-scene="village-hearth">Cooking hearth</button>
+<pre id="result">Ready</pre><iframe title="Wildbound under test"></iframe>
+<script type="module">
+import {freshState,KEY,VERSION} from '../src/save.js';
+import {expansionObjects} from '../src/content.js';
+const frame=document.querySelector('iframe'),result=document.querySelector('#result');
+const html=await (await fetch('../index.html')).text();let storage=new Map();
+const tick=()=>new Promise(r=>setTimeout(r,100));
+const el=id=>frame.contentDocument.getElementById(id);
+const state=()=>JSON.parse(storage.get(KEY));
+const checkWait=async fn=>{for(let i=0;i<100;i++){if(fn())return;await tick()}throw Error('UI did not become ready')};
+async function show(id,keep=false){
+  const s=keep?state():freshState(),o=expansionObjects.find(o=>o.id===id);
+  if(!keep){Object.assign(s.progress,{metGuide:true,tower:true,seals:['wind','reed','root','ember'],exitUnlocked:true,completed:true});s.adventure.coins=100;s.adventure.bag={berry:6,reed:4,root:4};s.player.hp=2;}
+  Object.assign(s.player,{x:o.x,y:o.y+40,level:o.level});
+  storage=new Map([[KEY,JSON.stringify({...s,version:VERSION,map:'great-plateau'})]]);const store=storage;
+  window.testStorage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)};
+  frame.srcdoc=html.replace('<head>',`<head><base href="${new URL('../',location.href).href}"><script>Object.defineProperty(window,'localStorage',{value:parent.testStorage});<\/script>`);
+  await new Promise(r=>frame.onload=r);await checkWait(()=>el('objective')?.textContent);await tick();
+}
+async function key(code){const w=frame.contentWindow;el('scene').dispatchEvent(new w.KeyboardEvent('keydown',{code,bubbles:true,cancelable:true}));await tick();el('scene').dispatchEvent(new w.KeyboardEvent('keyup',{code,bubbles:true,cancelable:true}));await tick();}
+const button=text=>[...el('adventure').querySelectorAll('button')].find(b=>b.textContent===text);
+const click=async text=>{const b=button(text);if(!b||b.disabled)throw Error('Unavailable button: '+text);b.click();await tick()};
+document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>{frame.style.width='1024px';frame.style.height='768px';show(b.dataset.scene)});
+document.querySelector('#run').onclick=async()=>{
+ const checks=[];const check=(name,ok)=>{if(!ok)throw Error(name);checks.push('PASS '+name);result.textContent=checks.join('\n')};
+ try{
+  await show('mara');await key('KeyE');check('E opens NPC dialogue and pauses',!el('overlay').hidden&&el('adventure').textContent.includes('Every traveler'));
+  await click('Accept quest');check('Quest acceptance saved',state().adventure.quests.supper==='active');await click('Complete quest');check('Quest turn-in consumes items and grants reward',state().adventure.quests.supper==='completed'&&state().adventure.bag.berry===4&&state().adventure.coins===112);
+  await click('Accept quest');check('Follow-up quest becomes available',state().adventure.quests.cook==='active');
+  await show('ivo',true);await key('KeyE');await click('Buy · 35 crowns');check('Merchant purchase saves stock and currency',state().adventure.bag.trailblade===1&&state().adventure.coins===77&&state().adventure.stock.provisions.trailblade===1);
+  await click('Pack & gear');await click('Equip');check('Gear equips from pack',state().adventure.gear.weapon==='trailblade');await click('Nearby');check('Equipped gear cannot be sold',button('Sell · 15 crowns').disabled);
+  await show('village-hearth',true);await key('KeyE');await click('Cook Wayfarer broth');check('Cooking creates food and consumes ingredients',state().adventure.bag.broth===1&&state().adventure.bag.berry===3&&state().adventure.cooked.broth===1);
+  await click('Pack & gear');await click('Eat');check('Eating restores health and consumes food',state().player.hp===5&&state().adventure.bag.broth===0);
+  await show('mara',true);await key('KeyE');await click('Complete quest');check('Cooking quest completes after reload',state().adventure.quests.cook==='completed');
+  await click('Quests');check('Quest log lists completed quests',el('adventure').textContent.includes('A meal for the road · Complete'));
+  await show('glass-bell',true);await key('KeyE');check('Landmark discovery persists',state().adventure.discoveries.includes('glass-bell'));check('Marsh region discovered',state().adventure.regions.includes('mire'));
+  await show('survey-cairn',true);await key('KeyE');check('Upper landmark interaction preserves elevation',state().adventure.discoveries.includes('survey-cairn')&&state().player.level===1);
+  frame.style.width='390px';frame.style.height='844px';await tick();check('Long upper-region name clears the objective',el('objective').getBoundingClientRect().top>=frame.contentDocument.querySelector('.hud').getBoundingClientRect().bottom);frame.style.width='1024px';frame.style.height='768px';
+  await show('hearth-rest',true);await key('KeyE');el('pause').click();await tick();check('Expanded travel destination appears',el('travel').textContent.includes('Hearthstead'));
+  await show('mara',true);await key('KeyE');await key('Escape');check('Escape closes dialogue',el('overlay').hidden);
+  // Synthetic pointer contract test; capture itself needs a physical device check.
+  const use=frame.contentDocument.querySelector('[data-control="interact"]');use.setPointerCapture=()=>{};use.dispatchEvent(new frame.contentWindow.PointerEvent('pointerdown',{pointerId:90,bubbles:true}));await tick();use.dispatchEvent(new frame.contentWindow.PointerEvent('pointerup',{pointerId:90,bubbles:true}));await tick();check('Touch USE opens dialogue',!el('overlay').hidden);
+  for(const [w,h] of [[1024,768],[768,1024],[390,844],[844,390]]){
+    frame.style.width=w+'px';frame.style.height=h+'px';await tick();await click('Pack & gear');const panel=frame.contentDocument.querySelector('.panel').getBoundingClientRect();check(`Journal fits ${w}×${h}`,panel.left>=0&&panel.right<=w&&panel.top>=0&&panel.bottom<=h);check(`Journal actions are touch-sized ${w}×${h}`,[...el('adventure').querySelectorAll('button')].every(b=>b.getBoundingClientRect().height>=44));
+  }
+  result.textContent=checks.join('\n')+`\nALL ${checks.length} EXPANSION UI CHECKS PASSED`;
+ }catch(e){result.textContent=checks.join('\n')+'\nFAIL '+e.stack;console.error(e)}
+};
+const params=new URLSearchParams(location.search);
+if(params.has('preview')){document.querySelectorAll('body>h1,body>p,body>button,body>pre').forEach(e=>e.hidden=true);document.body.style.margin='0';frame.style.width='100vw';frame.style.height='100dvh';frame.style.border='0';}
+await show(params.get('scene')??'mara');if(params.has('run'))document.querySelector('#run').click();
+</script></html>

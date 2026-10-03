@@ -1,5 +1,5 @@
-import {roomObjects,shrineDefinitions} from './shrines.js?v=0.5.0';
-import {drawCombatEntity,drawActorCues} from './combat-render.js?v=0.5.0';
+import {roomObjects,shrineDefinitions} from './shrines.js?v=0.6.0';
+import {drawCombatEntity,drawActorCues} from './combat-render.js?v=0.6.0';
 
 // Feet-based depth, raised masonry and independent semantic props retain the
 // outdoor 2.5D language. No raster asset is required by puzzle logic.

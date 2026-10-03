@@ -1,4 +1,4 @@
-import {direction} from './combat.js?v=0.5.0';
+import {direction} from './combat.js?v=0.6.0';
 // Effects are expressed in world units and independent of animation assets.
 export function drawCombatEntity(ctx,e,x,y){
   ctx.save();ctx.translate(x,y);

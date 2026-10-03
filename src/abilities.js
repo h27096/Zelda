@@ -1,6 +1,6 @@
-import {direction,distance,samePlane,clearPath,spend,hitEnemy,hurtPlayer,inArc} from './combat.js?v=0.5.0';
-import {waters,inside,canStand} from './world.js?v=0.5.0';
-import {pulseRoom} from './shrines.js?v=0.5.0';
+import {direction,distance,samePlane,clearPath,spend,hitEnemy,hurtPlayer,inArc} from './combat.js?v=0.6.0';
+import {waters,inside,canStand} from './world.js?v=0.6.0';
+import {pulseRoom} from './shrines.js?v=0.6.0';
 // Each prototype owns activation and transient state. Shrine systems can call these
 // without knowing about DOM controls or placeholder graphics.
 export const abilities={

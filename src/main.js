@@ -1,13 +1,14 @@
-import {toolNames} from './equipment.js?v=0.5.0';
-import {setupInput} from './input.js?v=0.5.0';
-import {load,save,clear,freshState} from './save.js?v=0.5.0';
-import {Game} from './game.js?v=0.5.0';
-import {Assets} from './assets.js?v=0.5.0';
-import {Renderer,drawMap} from './render.js?v=0.5.0';
-import {regionAt,shrines,initialEnemies} from './world.js?v=0.5.0';
-import {objective,journal,treasureCount} from './progression.js?v=0.5.0';
-import {destinations,buyUpgrade,fastTravel,unspent} from './journey.js?v=0.5.0';
-import {shrineDefinitions} from './shrines.js?v=0.5.0';
+import {renderAdventure} from './adventure-ui.js?v=0.6.0';
+import {toolNames} from './equipment.js?v=0.6.0';
+import {setupInput} from './input.js?v=0.6.0';
+import {load,save,clear,freshState} from './save.js?v=0.6.0';
+import {Game} from './game.js?v=0.6.0';
+import {Assets} from './assets.js?v=0.6.0';
+import {Renderer,drawMap} from './render.js?v=0.6.0';
+import {regionAt,shrines,initialEnemies} from './world.js?v=0.6.0';
+import {objective,journal,treasureCount} from './progression.js?v=0.6.0';
+import {destinations,buyUpgrade,fastTravel,unspent} from './journey.js?v=0.6.0';
+import {shrineDefinitions} from './shrines.js?v=0.6.0';
 const $=s=>document.querySelector(s),input=setupInput(),loaded=load();
 let game=new Game(loaded.state??freshState());
 const assets=new Assets(),renderer=new Renderer($('#scene'),assets);
@@ -17,9 +18,9 @@ if(startup[loaded.status])game.notice(startup[loaded.status]);
 let paused=false,last=0,accumulator=0,saveClock=0;
 const STEP=1/60;
 function saveProgress(show=false){const ok=save(game.snapshot());if(show||!ok)game.notice(ok?'Progress saved on this device.':'Save failed. Browser storage may be blocked or full.');return ok;}
-function pause(value=true){paused=value;input.clear();$('#overlay').hidden=!value;$('#pause').setAttribute('aria-expanded',String(value));if(value){
+function pause(value=true,context=null){paused=value;input.clear();$('#overlay').hidden=!value;$('#pause').setAttribute('aria-expanded',String(value));if(value){
   drawMap($('#atlas'),game);$('#tokens').textContent=`${treasureCount(game.progress)+game.journey.treasures.length*5} trail tokens · ${game.defeated.size} / ${initialEnemies().length} enemies cleared · White dot: ${game.shrine?'shrine entrance':'you'}`;
-  refreshJourney();
+  refreshJourney();renderAdventure($('#adventure'),game,()=>saveProgress(),context);
   $('#objectives').replaceChildren(...journal(game.progress).map(item=>{const li=document.createElement('li');li.textContent=(item.done?'✓ ':'○ ')+item.text;li.className=item.done?'done':'';return li}));$('#resume').focus({preventScroll:true});$('#overlay .panel').scrollTop=0;
 }else {document.activeElement?.blur();$('#scene').focus()}}
 function refreshJourney(){
@@ -42,6 +43,7 @@ function frame(t){
   if(!paused&&!document.hidden){accumulator+=dt;while(accumulator>=STEP){game.update(STEP,input);accumulator-=STEP;saveClock+=STEP;}
     if(saveClock>=12||game.needsSave){saveClock=0;game.needsSave=false;saveProgress();}
   }else accumulator=0;
+  if(game.panelRequest&&!paused){const context=game.panelRequest;game.panelRequest=null;pause(true,context);}
   renderer.draw(game,paused?0:dt);
   $('#hearts').textContent='♥'.repeat(game.player.hp)+'♡'.repeat(game.maxHearts-game.player.hp);$('#hearts').setAttribute('aria-label',`${game.player.hp} of ${game.maxHearts} hearts`);
   $('#level').textContent=game.room?`${shrines.find(s=>s.id===game.shrine).name} · ${game.room.index+1}/${shrineDefinitions[game.shrine].rooms.length}`:regionAt(game.player.x,game.player.y)+(game.player.level?' · UPPER':'');
@@ -62,3 +64,6 @@ window.addEventListener('resize',()=>renderer.resize());window.addEventListener(
 document.addEventListener('visibilitychange',()=>{if(document.hidden){saveProgress();pause(true)}});
 window.addEventListener('pagehide',()=>saveProgress());
 requestAnimationFrame(frame);
+
+// Keep keyboard focus in the open journal; native buttons support Enter and Space.
+window.addEventListener('keydown',e=>{if(!paused||e.key!=='Tab')return;const nodes=[...document.querySelectorAll('#overlay button:not(:disabled),#overlay a')].filter(n=>n.getClientRects().length);const first=nodes[0],last=nodes.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus()}});

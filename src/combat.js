@@ -1,5 +1,6 @@
-import {directionNames} from './input.js?v=0.5.0';
-import {canStand,elevationAt} from './world.js?v=0.5.0';
+import {gearStat,awardCoins} from './adventure.js?v=0.6.0';
+import {directionNames} from './input.js?v=0.6.0';
+import {canStand,elevationAt} from './world.js?v=0.6.0';
 export const direction=face=>{const a=directionNames.indexOf(face)*Math.PI/4;return {x:Math.cos(a),y:Math.sin(a)}};
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export const samePlane=(a,b)=>a.level===b.level&&Math.abs(elevationAt(a.x,a.y,a.level)-elevationAt(b.x,b.y,b.level))<18;
@@ -20,19 +21,19 @@ export function clearPath(g,a,b){
     return Math.hypot(c.x-a.x-t*dx,c.y-a.y-t*dy)<c.r;
   });
 }
-export function spend(g,n){if(g.equipment.stamina<n)return false;g.equipment.stamina-=n;g.regenDelay=.65;return true}
+export function spend(g,n){n*=gearStat(g,'staminaCost')||1;if(g.equipment.stamina<n)return false;g.equipment.stamina-=n;g.regenDelay=.65;return true}
 export function hitEnemy(g,e,damage,source){
   if(e.hp<=0||e.hurt>0)return false;
   e.hp-=damage;e.hurt=.24;e.windup=0;e.cooldown=.65;
   const d=distance(e,source)||1;g.moveBody(e,(e.x-source.x)/d*20,(e.y-source.y)/d*20);
   g.effects.push({...e,kind:'impact',life:.22});
-  if(e.hp<=0){g.defeated.add(e.id);g.equipment.arrows=Math.min(30,g.equipment.arrows+3);g.needsSave=true;g.notice('Trail cleared · Recovered 3 arrows.');}
+  if(e.hp<=0){g.defeated.add(e.id);awardCoins(g,3);g.equipment.arrows=Math.min(30,g.equipment.arrows+3);g.needsSave=true;g.notice('Trail cleared · Recovered 3 arrows.');}
   return true;
 }
 export function hurtPlayer(g,source,damage=1,blockable=true){
   const p=g.player;if(p.hurt>0||!samePlane(p,source))return;
   if(blockable&&p.blocking&&inArc(p,source,90,.45)&&spend(g,24)){g.effects.push({...p,kind:'guard',life:.25});return;}
-  p.blocking=false;p.hp-=damage;p.hurt=1.2;p.attack=0;g.swing=null;g.aiming=false;g.heldObject=null;g.needsSave=true;
+  p.blocking=false;p.hp-=Math.max(1,damage-gearStat(g,'defense'));p.hurt=1.2;p.attack=0;g.swing=null;g.aiming=false;g.heldObject=null;g.needsSave=true;
   const d=distance(p,source)||1;g.moveBody(p,(p.x-source.x)/d*24,(p.y-source.y)/d*24);
   if(p.hp<=0)g.respawn();
 }
@@ -45,7 +46,7 @@ export function updateCombat(g,dt,input){
   g.comboTime=Math.max(0,g.comboTime-dt);
   if(g.swing){const s=g.swing;s.age+=dt;p.attack=Math.max(0,.38-s.age);
     if(s.age>=.09&&s.age<=.22){for(const e of g.enemies)if(!s.hits.has(e.id)&&inArc({...p,face:s.face},e,64,s.combo===3?-.05:.35)&&clearPath(g,p,e)){
-      if(hitEnemy(g,e,s.combo===3&&eq.sword>0?2:1,p)){s.hits.add(e.id);if(eq.sword>0)eq.sword--;g.needsSave=true;}
+      if(hitEnemy(g,e,(s.combo===3&&eq.sword>0?2:1)+(eq.sword>0?gearStat(g,'attack'):0),p)){s.hits.add(e.id);if(eq.sword>0)eq.sword--;g.needsSave=true;}
     }}
     if(s.age>=.38){g.swing=null;g.comboTime=.32;if(s.queued)startSwing(g,(s.combo%3)+1);}
   }
